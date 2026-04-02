@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Donor Flow — AI Queue Management</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0EDE8;--surface:#FFFFFF;--surface2:#F7F5F2;--surface3:#EDEAE5;
+  --border:#E0DDD8;--border2:#CECBC5;
+  --text:#1A1816;--text2:#6B6560;--text3:#A09890;
+  --blue:#1B4FD8;--blue-bg:#EEF2FF;--blue-light:#DBEAFE;
+  --green:#0D7A4E;--green-bg:#ECFDF5;--green-light:#BBF7D0;
+  --amber:#B45309;--amber-bg:#FFFBEB;--amber-light:#FDE68A;
+  --red:#C5362A;--red-bg:#FEF2F2;--red-light:#FECACA;
+  --purple:#6D28D9;--purple-bg:#F5F3FF;--purple-light:#DDD6FE;
+  --teal:#0F766E;--teal-bg:#F0FDFA;--teal-light:#99F6E4;
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg:0 4px 16px rgba(0,0,0,0.1),0 2px 6px rgba(0,0,0,0.06);
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+
+/* ── Gate ── */
+#gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
+.gate-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:2.5rem;width:440px;max-width:92vw;box-shadow:var(--shadow-lg)}
+.gate-logo{display:flex;align-items:center;gap:10px;margin-bottom:2rem}
+.gate-logo-icon{width:36px;height:36px;background:var(--blue);border-radius:var(--radius);display:flex;align-items:center;justify-content:center}
+.gate-logo-icon svg{width:18px;height:18px;fill:white}
+.gate-logo-name{font-size:17px;font-weight:600;color:var(--text)}
+.gate-logo-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.gate-h{font-size:15px;font-weight:600;margin-bottom:6px}
+.gate-sub{font-size:13px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
+.gate-field{position:relative;margin-bottom:.75rem}
+.gate-field input{width:100%;padding:10px 48px 10px 12px;font-size:13px;font-family:var(--mono);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;transition:border .15s}
+.gate-field input:focus{border-color:var(--blue);background:var(--surface)}
+.gate-field button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:11px;color:var(--text3);cursor:pointer;padding:4px 6px;border-radius:4px;font-family:var(--font)}
+.gate-field button:hover{background:var(--surface3);color:var(--text2)}
+.gate-err{font-size:12px;color:var(--red);background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--radius);padding:8px 12px;margin-bottom:1rem;display:none}
+.gate-note{font-size:11px;color:var(--text3);margin-bottom:1.5rem;display:flex;gap:6px;line-height:1.5}
+.gate-btn{width:100%;padding:11px;font-size:14px;font-weight:600;font-family:var(--font);border-radius:var(--radius);border:none;cursor:pointer;background:var(--blue);color:white;transition:all .15s}
+.gate-btn:hover{background:#1540B0}
+.gate-btn:disabled{opacity:.5;cursor:not-allowed}
+.gate-divider{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
+.gate-steps{display:flex;flex-direction:column;gap:10px}
+.gate-step{display:flex;gap:10px;align-items:flex-start}
+.gate-step-n{width:20px;height:20px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text2);flex-shrink:0;margin-top:1px}
+.gate-step-t{font-size:12px;color:var(--text2);line-height:1.5}
+.gate-step-t a{color:var(--blue);text-decoration:none}
+.gate-step-t a:hover{text-decoration:underline}
+
+/* ── Layout ── */
+.app{display:grid;grid-template-rows:auto 1fr;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;gap:0;position:sticky;top:0;z-index:50}
+.topbar-logo{display:flex;align-items:center;gap:8px;padding:12px 0;margin-right:2rem}
+.topbar-logo-icon{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.topbar-logo-icon svg{width:14px;height:14px;fill:white}
+.topbar-logo-name{font-size:15px;font-weight:600;color:var(--text)}
+.topbar-nav{display:flex;align-items:stretch;gap:0;flex:1}
+.tnav{padding:0 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;transition:all .15s;height:48px;white-space:nowrap}
+.tnav:hover{color:var(--text)}
+.tnav.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tnav svg{width:14px;height:14px}
+.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.role-select{font-size:12px;font-weight:500;padding:5px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;font-family:var(--font)}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--green);background:var(--green-bg);border:1px solid var(--green-light);padding:4px 10px;border-radius:20px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.view{display:none;padding:1.5rem;animation:fadeIn .2s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:1.25rem}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:.875rem 1rem}
+.metric-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.metric-value{font-size:22px;font-weight:600;color:var(--text);line-height:1}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.metric.alert .metric-value{color:var(--red)}
+.metric.good .metric-value{color:var(--green)}
+
+/* ── Section Tabs ── */
+.section-tabs{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap}
+.stab{padding:6px 14px;font-size:12px;font-weight:500;border-radius:20px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.stab:hover{background:var(--surface3)}
+.stab.active{background:var(--blue);color:white;border-color:var(--blue)}
+.stab .stab-count{font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:rgba(255,255,255,.25)}
+.stab:not(.active) .stab-count{background:var(--surface3);color:var(--text2)}
+
+/* ── Queue Grid ── */
+.queue-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.queue-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.queue-card.fp-card{border-top:3px solid var(--blue)}
+.queue-card.reg-card{border-top:3px solid var(--green)}
+.queue-card.pe-card{border-top:3px solid var(--amber)}
+.queue-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.queue-head-left{display:flex;align-items:center;gap:8px}
+.queue-lane-dot{width:8px;height:8px;border-radius:50%}
+.queue-title{font-size:13px;font-weight:600;color:var(--text)}
+.queue-count{font-size:11px;color:var(--text3)}
+.queue-body{overflow:hidden}
+
+/* ── Donor Row ── */
+.donor-row{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;transition:background .1s;cursor:default}
+.donor-row:last-child{border-bottom:none}
+.donor-row:hover{background:var(--surface2)}
+.donor-row.serving-row{background:var(--green-bg)}
+.donor-row.serving-row:hover{background:#DCFCE7}
+.pos-badge{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.pos-fp{background:var(--blue-light);color:var(--blue)}
+.pos-reg{background:var(--surface3);color:var(--text2)}
+.pos-serving{background:var(--green-light);color:var(--green)}
+.pos-pe{background:var(--amber-light);color:var(--amber)}
+.donor-main{flex:1;min-width:0}
+.donor-name-row{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.donor-name{font-size:13px;font-weight:600;color:var(--text)}
+.donor-detail{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:8px}
+.donor-time{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.donor-phone{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.section-chip{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
+.chip-blue{background:var(--blue-light);color:var(--blue)}
+.chip-red{background:var(--red-light);color:var(--red)}
+.chip-yellow{background:var(--amber-light);color:var(--amber)}
+.chip-green{background:var(--green-light);color:var(--green)}
+.chip-purple{background:var(--purple-light);color:var(--purple)}
+.wait-chip{font-size:10px;color:var(--text3)}
+.badge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
+.badge-fp{background:var(--blue-bg);color:var(--blue)}
+.badge-new{background:var(--green-bg);color:var(--green)}
+.badge-spe{background:var(--amber-bg);color:var(--amber)}
+.badge-reg{background:var(--surface3);color:var(--text2)}
+.badge-serving{background:var(--green-light);color:var(--green)}
+.row-actions{display:flex;gap:4px;flex-shrink:0}
+.act-btn{font-size:11px;font-weight:500;padding:4px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .15s;font-family:var(--font)}
+.act-btn:hover{background:var(--surface3);color:var(--text)}
+.act-btn.call{background:var(--blue);color:white;border-color:var(--blue)}
+.act-btn.call:hover{background:#1540B0}
+.act-btn.done{background:var(--green);color:white;border-color:var(--green)}
+.act-btn.done:hover{background:#0A6340}
+.act-btn.remove{color:var(--red)}
+.act-btn.remove:hover{background:var(--red-bg);border-color:var(--red-light)}
+.act-btn.transfer{color:var(--purple)}
+.act-btn.transfer:hover{background:var(--purple-bg);border-color:var(--purple-light)}
+.act-btn:disabled{opacity:.4;cursor:not-allowed}
+.add-row{padding:8px 14px;border-top:1px dashed var(--border2);display:flex;gap:6px}
+.add-btn{flex:1;padding:7px;font-size:12px;font-weight:500;font-family:var(--font);border:1px dashed var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s}
+.add-btn:hover{background:var(--surface2);color:var(--text)}
+
+/* ── AI Panel ── */
+.ai-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-top:1rem}
+.ai-head{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
+.ai-icon{width:24px;height:24px;border-radius:6px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center}
+.ai-icon svg{width:13px;height:13px}
+.ai-title{font-size:13px;font-weight:600;color:var(--text)}
+.ai-status{font-size:11px;color:var(--text3);margin-left:auto;display:flex;align-items:center;gap:5px}
+.ai-status-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.ai-status-dot.thinking{background:var(--amber);animation:pulse .6s infinite}
+.ai-row{display:flex;gap:8px}
+.ai-input{flex:1;padding:8px 12px;font-size:13px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none}
+.ai-input:focus{border-color:var(--blue);background:var(--surface)}
+.ai-send{padding:8px 14px;font-size:12px;font-weight:600;font-family:var(--font);border-radius:var(--radius);border:none;background:var(--blue);color:white;cursor:pointer;transition:background .15s}
+.ai-send:hover{background:#1540B0}
+.ai-send:disabled{opacity:.5;cursor:not-allowed}
+.ai-msgs{margin-top:.75rem;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.ai-msg{font-size:12px;line-height:1.6;padding:7px 10px;border-radius:var(--radius)}
+.ai-msg.user{background:var(--surface2);color:var(--text);align-self:flex-end;max-width:75%}
+.ai-msg.assistant{background:var(--blue-bg);color:#1E3A8A;align-self:flex-start;max-width:88%}
+.ai-msg.system{background:var(--green-bg);color:#065F46;font-size:11px}
+.ai-msg.event{background:var(--amber-bg);color:#92400E;font-size:11px;font-style:italic}
+.ai-thinking{font-size:11px;color:var(--text3);padding:4px 0;display:flex;align-items:center;gap:5px}
+.dots span{animation:dbounce 1s infinite;display:inline-block}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
+/* ── DIS/DEP Simulator ── */
+.sim-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-top:1rem}
+.sim-head{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
+.sim-title{font-size:13px;font-weight:600;color:var(--text)}
+.sim-sub{font-size:11px;color:var(--text3);margin-left:auto}
+.sim-btns{display:flex;gap:8px;flex-wrap:wrap}
+.sim-btn{padding:6px 14px;font-size:12px;font-weight:500;font-family:var(--font);border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.sim-btn:hover{background:var(--surface3);color:var(--text)}
+.sim-btn.fire{background:var(--amber-bg);border-color:var(--amber-light);color:var(--amber)}
+.sim-btn.fire:hover{background:var(--amber-light)}
+.sim-btn svg{width:12px;height:12px}
+
+/* ── Kiosk ── */
+.kiosk-wrap{max-width:460px;margin:0 auto}
+.kiosk-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg)}
+.kiosk-header{background:var(--blue);padding:1.75rem 2rem;text-align:center}
+.kiosk-header h2{font-size:18px;font-weight:600;color:white;margin-bottom:4px}
+.kiosk-header p{font-size:13px;color:rgba(255,255,255,.75)}
+.kiosk-body{padding:1.75rem 2rem}
+.tab-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:3px;margin-bottom:1.5rem;gap:2px}
+.ktab{flex:1;padding:7px;font-size:12px;font-weight:500;font-family:var(--font);border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s}
+.ktab.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.field input,.field select{width:100%;padding:9px 12px;font-size:14px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;transition:border .15s}
+.field input:focus,.field select:focus{border-color:var(--blue)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt-row{display:flex;align-items:center;gap:8px;margin:.5rem 0}
+.opt-row input{width:15px;height:15px;accent-color:var(--blue)}
+.opt-row label{font-size:13px;color:var(--text2)}
+.kbtn{width:100%;padding:12px;font-size:14px;font-weight:600;font-family:var(--font);border-radius:var(--radius);border:none;cursor:pointer;transition:all .15s;margin-top:.5rem}
+.kbtn.primary{background:var(--blue);color:white}
+.kbtn.primary:hover{background:#1540B0}
+.kbtn:disabled{opacity:.5;cursor:not-allowed}
+.ai-welcome{margin-top:1rem;padding:12px;background:var(--blue-bg);border:1px solid var(--blue-light);border-radius:var(--radius);font-size:13px;color:#1E3A8A;line-height:1.6;display:none}
+.success-body{padding:2rem;text-align:center}
+.success-circle{width:64px;height:64px;border-radius:50%;background:var(--green-bg);border:2px solid var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.success-circle svg{width:28px;height:28px;stroke:var(--green);fill:none;stroke-width:2.5}
+.success-pos-wrap{margin:1rem 0;padding:1rem;background:var(--surface2);border-radius:var(--radius-lg);border:1px solid var(--border)}
+.success-pos{font-size:52px;font-weight:700;color:var(--blue);line-height:1}
+.success-lane{font-size:13px;color:var(--text2);margin-top:4px}
+.success-msg{font-size:13px;color:var(--text2);line-height:1.6;margin-top:.75rem}
+.success-ai{margin-top:1rem;padding:12px;background:var(--blue-bg);border-radius:var(--radius);font-size:12px;color:#1E3A8A;line-height:1.6;text-align:left}
+.qr-area{text-align:center;padding:1.5rem 0}
+.qr-frame{width:140px;height:140px;margin:0 auto 1rem;border:2px solid var(--border2);border-radius:var(--radius-lg);display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:8px;background:var(--surface)}
+
+/* ── TV Display ── */
+.tv-container{background:#060D1F;border-radius:var(--radius-xl);padding:0;overflow:hidden;min-height:520px}
+.tv-header{background:#0A1628;border-bottom:1px solid rgba(255,255,255,.08);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.tv-logo{display:flex;align-items:center;gap:10px}
+.tv-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.tv-logo-icon svg{width:16px;height:16px;fill:white}
+.tv-logo-name{font-size:16px;font-weight:600;color:white}
+.tv-logo-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
+.tv-right{display:flex;align-items:center;gap:12px}
+.tv-clock{font-family:var(--mono);font-size:16px;font-weight:500;color:rgba(255,255,255,.7)}
+.tv-live{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#4ADE80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);padding:4px 10px;border-radius:20px}
+.tv-live-dot{width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:pulse 1.5s infinite}
+.tv-body{padding:1.25rem 1.5rem}
+.tv-lanes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem}
+.tv-lane{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius-lg);overflow:hidden}
+.tv-lane-head{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:7px}
+.tv-lane-dot{width:7px;height:7px;border-radius:50%}
+.tv-lane-title{font-size:12px;font-weight:600;color:rgba(255,255,255,.8)}
+.tv-lane-count{font-size:11px;color:rgba(255,255,255,.35);margin-left:auto}
+.tv-row{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px}
+.tv-row.tv-serving{background:rgba(74,222,128,.07)}
+.tv-row-pos{font-size:16px;font-weight:600;color:rgba(255,255,255,.2);width:22px;flex-shrink:0;font-family:var(--mono)}
+.tv-row-info{flex:1}
+.tv-serving-tag{font-size:9px;font-weight:700;letter-spacing:.8px;color:#4ADE80;margin-bottom:2px}
+.tv-row-name{font-size:14px;font-weight:600;color:white}
+.tv-row-wait{font-size:10px;color:rgba(255,255,255,.35)}
+.tv-section-tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px}
+.tvs-blue{background:rgba(59,130,246,.2);color:#93C5FD}
+.tvs-red{background:rgba(239,68,68,.2);color:#FCA5A5}
+.tvs-yellow{background:rgba(245,158,11,.2);color:#FCD34D}
+.tvs-green{background:rgba(16,185,129,.2);color:#6EE7B7}
+.tvs-purple{background:rgba(139,92,246,.2);color:#C4B5FD}
+.tv-insight{margin-top:1rem;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);border-radius:var(--radius-lg);padding:.875rem 1.25rem;display:flex;align-items:flex-start;gap:10px}
+.tv-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.tv-insight-text{font-size:12px;color:rgba(255,255,255,.55);line-height:1.6}
+.tv-ticker{background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.05);padding:.625rem 1.5rem;font-size:12px;color:rgba(255,255,255,.3);text-align:center}
+
+/* ── Modal ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-xl);border:1px solid var(--border);padding:1.5rem;width:360px;max-width:92vw;box-shadow:var(--shadow-lg)}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:1rem}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem}
+.mbtn{padding:7px 16px;font-size:13px;font-weight:500;font-family:var(--font);border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;transition:all .15s}
+.mbtn:hover{background:var(--surface3)}
+.mbtn.primary{background:var(--blue);color:white;border-color:var(--blue)}
+.mbtn.primary:hover{background:#1540B0}
+.mbtn:disabled{opacity:.5;cursor:not-allowed}
+.ai-hint{margin-top:.75rem;padding:8px 10px;background:var(--blue-bg);border-radius:var(--radius);font-size:11px;color:#1E3A8A;line-height:1.5;display:none}
+
+/* ── Transfer Modal ── */
+.transfer-options{display:flex;flex-direction:column;gap:8px;margin-top:.5rem}
+.transfer-opt{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px}
+.transfer-opt:hover{border-color:var(--blue);background:var(--blue-bg)}
+.transfer-opt.selected{border-color:var(--blue);background:var(--blue-bg)}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--text);color:white;border-radius:var(--radius);padding:9px 16px;font-size:13px;z-index:500;display:none;max-width:300px;box-shadow:var(--shadow-lg)}
+.toast.show{display:block}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+.toast.info{background:var(--blue)}
+
+/* ── Utils ── */
+.select-field{width:100%;padding:8px 12px;font-size:13px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none}
+.label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;display:block}
+.empty{padding:20px;text-align:center;font-size:13px;color:var(--text3)}
+</style>
+</head>
+<body>
+
+<!-- Gate -->
+<div id="gate">
+  <div class="gate-wrap">
+    <div class="gate-logo">
+      <div class="gate-logo-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div><div class="gate-logo-name">Donor Flow</div><div class="gate-logo-sub">AI Queue Management — POC</div></div>
+    </div>
+    <div class="gate-h">Enter your Anthropic API key</div>
+    <div class="gate-sub">Powers the AI Queue Assistant, smart check-in messages, and live TV insights. Key stays in memory only — never stored.</div>
+    <div class="gate-field">
+      <input type="password" id="gate-input" placeholder="sk-ant-api03-..."/>
+      <button onclick="toggleGateKey()" id="gate-toggle">Show</button>
+    </div>
+    <div class="gate-err" id="gate-err">Invalid key — must start with sk-ant-</div>
+    <div class="gate-note"><span>🔒</span><span>Memory only. Clears on page refresh. Never sent anywhere except directly to api.anthropic.com.</span></div>
+    <button class="gate-btn" id="gate-btn" onclick="submitGate()">Launch Donor Flow</button>
+    <hr class="gate-divider"/>
+    <div class="gate-steps">
+      <div class="gate-step"><div class="gate-step-n">1</div><div class="gate-step-t">Visit <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a></div></div>
+      <div class="gate-step"><div class="gate-step-n">2</div><div class="gate-step-t">Create a new key — name it "Donor Flow POC"</div></div>
+      <div class="gate-step"><div class="gate-step-n">3</div><div class="gate-step-t">Copy and paste the key above, then click Launch</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app">
+  <nav class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="topbar-logo-name">Donor Flow</div>
+    </div>
+    <div class="topbar-nav">
+      <div class="tnav active" onclick="switchView('staff',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Staff Dashboard
+      </div>
+      <div class="tnav" onclick="switchView('kiosk',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+        Donor Kiosk
+      </div>
+      <div class="tnav" onclick="switchView('tv',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        TV Display
+      </div>
+    </div>
+    <div class="topbar-right">
+      <select class="role-select" id="role-select" onchange="onRoleChange()">
+        <option value="MSS">Role: MSS (Supervisor)</option>
+        <option value="BAM">Role: BAM (Admin Manager)</option>
+        <option value="MH">Role: MH (Medical Historian)</option>
+        <option value="PHLEBOTOMIST">Role: Phlebotomist</option>
+      </select>
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    </div>
+  </nav>
+
+  <!-- ── STAFF VIEW ── -->
+  <div class="view active" id="view-staff">
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Total in queue</div><div class="metric-value" id="m-total">0</div><div class="metric-sub">all lanes</div></div>
+      <div class="metric"><div class="metric-label">FastPass waiting</div><div class="metric-value" id="m-fp">0</div><div class="metric-sub">priority lane</div></div>
+      <div class="metric"><div class="metric-label">Regular waiting</div><div class="metric-value" id="m-reg">0</div><div class="metric-sub">standard lane</div></div>
+      <div class="metric"><div class="metric-label">Avg wait time</div><div class="metric-value" id="m-wait">—</div><div class="metric-sub">minutes</div></div>
+      <div class="metric"><div class="metric-label">Beds available</div><div class="metric-value" id="m-beds">5</div><div class="metric-sub">of 8 sections</div></div>
+    </div>
+
+    <div class="section-tabs" id="section-tabs">
+      <div class="stab active" onclick="switchSection('all',this)">All Sections <span class="stab-count" id="sc-all">0</span></div>
+      <div class="stab" onclick="switchSection('screening',this)">Screening <span class="stab-count" id="sc-screening">0</span></div>
+      <div class="stab" onclick="switchSection('blue',this)">Blue Section <span class="stab-count" id="sc-blue">0</span></div>
+      <div class="stab" onclick="switchSection('red',this)">Red Section <span class="stab-count" id="sc-red">0</span></div>
+      <div class="stab" onclick="switchSection('yellow',this)">Yellow Section <span class="stab-count" id="sc-yellow">0</span></div>
+      <div class="stab" onclick="switchSection('green',this)">Green Section <span class="stab-count" id="sc-green">0</span></div>
+    </div>
+
+    <div class="queue-grid" id="queue-grid">
+      <div class="queue-card fp-card">
+        <div class="queue-head">
+          <div class="queue-head-left"><div class="queue-lane-dot" style="background:var(--blue)"></div><div class="queue-title">FastPass Lane</div></div>
+          <div class="queue-count" id="fp-count">0 donors</div>
+        </div>
+        <div class="queue-body" id="fp-queue"><div class="empty">No donors in FastPass lane</div></div>
+        <div class="add-row">
+          <button class="add-btn" onclick="openAdd('fp')" id="add-fp-btn">+ Add donor</button>
+          <button class="add-btn" onclick="callNextInLane('fp')" id="call-next-fp" style="flex:0.6;font-size:11px">Call next →</button>
+        </div>
+      </div>
+      <div class="queue-card reg-card">
+        <div class="queue-head">
+          <div class="queue-head-left"><div class="queue-lane-dot" style="background:var(--green)"></div><div class="queue-title">Regular Lane</div></div>
+          <div class="queue-count" id="reg-count">0 donors</div>
+        </div>
+        <div class="queue-body" id="reg-queue"><div class="empty">No donors in Regular lane</div></div>
+        <div class="add-row">
+          <button class="add-btn" onclick="openAdd('reg')" id="add-reg-btn">+ Add donor</button>
+          <button class="add-btn" onclick="callNextInLane('reg')" id="call-next-reg" style="flex:0.6;font-size:11px">Call next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIS/DEP Simulator -->
+    <div class="sim-panel">
+      <div class="sim-head">
+        <div class="ai-icon" style="background:var(--amber-bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="sim-title">DIS / DEP Integration Simulator</div>
+        <div class="sim-sub">Fire mock integration events to simulate real-time data flow</div>
+      </div>
+      <div class="sim-btns">
+        <button class="sim-btn fire" onclick="simEvent('edq')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          EDQ Check-in Complete
+        </button>
+        <button class="sim-btn fire" onclick="simEvent('fastpass')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          FastPass Activated (DEP)
+        </button>
+        <button class="sim-btn fire" onclick="simEvent('bed')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Bed Available (DIS)
+        </button>
+        <button class="sim-btn fire" onclick="simEvent('new')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          New Donor Check-in (DIS)
+        </button>
+        <button class="sim-btn" onclick="simEvent('disconnect')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          Donor Disconnected (DIS)
+        </button>
+      </div>
+    </div>
+
+    <!-- AI Panel -->
+    <div class="ai-panel">
+      <div class="ai-head">
+        <div class="ai-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="ai-title">AI Queue Assistant</div>
+        <div class="ai-status"><div class="ai-status-dot" id="ai-dot"></div><span id="ai-status-text">Ready</span></div>
+      </div>
+      <div class="ai-row">
+        <input class="ai-input" id="ai-input" placeholder="Who should I call next? Any bottlenecks? How's the FastPass load?" onkeydown="if(event.key==='Enter')askAI()"/>
+        <button class="ai-send" id="ai-send" onclick="askAI()">Ask</button>
+      </div>
+      <div class="ai-msgs" id="ai-msgs"></div>
+    </div>
+  </div>
+
+  <!-- ── KIOSK VIEW ── -->
+  <div class="view" id="view-kiosk">
+    <div class="kiosk-wrap">
+      <div class="kiosk-card">
+        <div class="kiosk-header">
+          <h2>BioLife Donor Check-In</h2>
+          <p>Welcome! Please register to join the queue</p>
+        </div>
+        <div class="kiosk-body">
+          <div class="tab-toggle">
+            <button class="ktab active" onclick="switchKioskTab('name',this)">Enter name</button>
+            <button class="ktab" onclick="switchKioskTab('qr',this)">FastPass QR</button>
+          </div>
+
+          <div id="ktab-name">
+            <div class="field-row">
+              <div class="field"><label>First name</label><input id="k-first" type="text" placeholder="Sarah"/></div>
+              <div class="field"><label>Last initial</label><input id="k-last" type="text" placeholder="M" maxlength="1"/></div>
+            </div>
+            <div class="field"><label>Phone number (for SMS updates)</label><input id="k-phone" type="tel" placeholder="(555) 000-0000"/></div>
+            <div class="field">
+              <label>Donor type</label>
+              <select id="k-type">
+                <option value="Donation">Regular donor</option>
+                <option value="New Donor">New donor — first visit</option>
+                <option value="SPE">SPE donor</option>
+              </select>
+            </div>
+            <div class="opt-row"><input type="checkbox" id="k-sms"/><label for="k-sms">Opt in to SMS queue updates (no need to share phone verbally)</label></div>
+            <button class="kbtn primary" id="kiosk-join-btn" onclick="kioskJoin()">Join queue</button>
+            <div class="ai-welcome" id="k-ai-msg"></div>
+          </div>
+
+          <div id="ktab-qr" style="display:none">
+            <div class="qr-area">
+              <div class="qr-frame" id="qr-frame"></div>
+              <p style="font-size:13px;color:var(--text2);margin-bottom:1.5rem">Open BioLife app → tap FastPass → scan this code</p>
+              <button class="kbtn primary" id="fp-scan-btn" onclick="simulateFPScan()">Simulate FastPass scan</button>
+              <div class="ai-welcome" id="k-fp-ai-msg" style="margin-top:1rem"></div>
+            </div>
+          </div>
+
+          <div id="ktab-success" style="display:none">
+            <div class="success-body">
+              <div class="success-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div style="font-size:15px;font-weight:600;margin-bottom:.5rem">You're in the queue!</div>
+              <div class="success-pos-wrap">
+                <div class="success-pos" id="s-pos">—</div>
+                <div class="success-lane" id="s-lane">—</div>
+              </div>
+              <div class="success-msg" id="s-msg"></div>
+              <div class="success-ai" id="s-ai"></div>
+              <button class="kbtn primary" style="margin-top:1.25rem" onclick="resetKiosk()">Done — next donor</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TV VIEW ── -->
+  <div class="view" id="view-tv">
+    <div class="tv-container">
+      <div class="tv-header">
+        <div class="tv-logo">
+          <div class="tv-logo-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div><div class="tv-logo-name">Donor Flow</div><div class="tv-logo-sub">Live Queue Status</div></div>
+        </div>
+        <div class="tv-right">
+          <div class="tv-clock" id="tv-clock">--:-- --</div>
+          <div class="tv-live"><div class="tv-live-dot"></div>LIVE</div>
+        </div>
+      </div>
+      <div class="tv-body">
+        <div class="tv-lanes">
+          <div class="tv-lane">
+            <div class="tv-lane-head"><div class="tv-lane-dot" style="background:#3B82F6"></div><div class="tv-lane-title">FastPass Lane</div><div class="tv-lane-count" id="tv-fp-count">0 waiting</div></div>
+            <div id="tv-fp-body"><div style="padding:16px;text-align:center;font-size:12px;color:rgba(255,255,255,.25)">No donors</div></div>
+          </div>
+          <div class="tv-lane">
+            <div class="tv-lane-head"><div class="tv-lane-dot" style="background:#10B981"></div><div class="tv-lane-title">Regular Lane</div><div class="tv-lane-count" id="tv-reg-count">0 waiting</div></div>
+            <div id="tv-reg-body"><div style="padding:16px;text-align:center;font-size:12px;color:rgba(255,255,255,.25)">No donors</div></div>
+          </div>
+          <div class="tv-lane">
+            <div class="tv-lane-head"><div class="tv-lane-dot" style="background:#F59E0B"></div><div class="tv-lane-title">PE / Screening</div><div class="tv-lane-count" id="tv-pe-count">0 waiting</div></div>
+            <div id="tv-pe-body"><div style="padding:16px;text-align:center;font-size:12px;color:rgba(255,255,255,.25)">No donors</div></div>
+          </div>
+        </div>
+        <div class="tv-insight" id="tv-insight" style="display:none">
+          <div class="tv-insight-icon">⚡</div>
+          <div class="tv-insight-text" id="tv-insight-text"></div>
+        </div>
+      </div>
+      <div class="tv-ticker" id="tv-ticker">System online — donors will appear as they check in</div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="overlay" id="add-modal" onclick="if(event.target===this)closeAdd()">
+  <div class="modal">
+    <div class="modal-title" id="add-modal-title">Add donor to queue</div>
+    <div class="field"><label class="label">Donor name</label><input class="select-field" id="add-name" placeholder="First name + last initial" style="padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;width:100%"/></div>
+    <div class="field" style="margin-top:.75rem"><label class="label">Phone number</label><input class="select-field" id="add-phone" placeholder="(555) 000-0000" style="padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;width:100%;font-family:var(--mono)"/></div>
+    <div class="field" style="margin-top:.75rem"><label class="label">Donor type</label>
+      <select class="select-field" id="add-type">
+        <option value="Donation">Regular donation</option>
+        <option value="New Donor">New donor</option>
+        <option value="SPE">SPE</option>
+        <option value="Fast Pass">Fast Pass</option>
+      </select>
+    </div>
+    <div class="ai-hint" id="add-hint"></div>
+    <div class="modal-actions">
+      <button class="mbtn" onclick="closeAdd()">Cancel</button>
+      <button class="mbtn primary" id="add-confirm-btn" onclick="confirmAdd()">Add to queue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div class="overlay" id="transfer-modal" onclick="if(event.target===this)closeTransfer()">
+  <div class="modal">
+    <div class="modal-title">Transfer donor to another lane</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Select destination lane for <strong id="transfer-donor-name"></strong></div>
+    <div class="transfer-options" id="transfer-opts"></div>
+    <div class="modal-actions">
+      <button class="mbtn" onclick="closeTransfer()">Cancel</button>
+      <button class="mbtn primary" onclick="confirmTransfer()">Transfer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+const SECTIONS = ['Blue Section','Red Section','Yellow Section','Green Section','Purple Section'];
+const SECTION_CHIPS = {
+  'Blue Section':'chip-blue tvs-blue',
+  'Red Section':'chip-red tvs-red',
+  'Yellow Section':'chip-yellow tvs-yellow',
+  'Green Section':'chip-green tvs-green',
+  'Purple Section':'chip-purple tvs-purple'
+};
+const SECTION_FILTER_MAP = {blue:'Blue Section',red:'Red Section',yellow:'Yellow Section',green:'Green Section'};
+const DONOR_NAMES = ['Sarah M.','James T.','Priya K.','Carlos M.','Aisha W.','Ben S.','Maria C.','Tom R.','Lisa H.','David K.','Emma P.','Ryan O.','Nadia F.','Chris L.'];
+
+let fpQueue=[], regQueue=[], peQueue=[];
+let nextId=1, addingTo='fp', transferDonorId=null, transferFromLane=null;
+let bedsAvailable=5, API_KEY='', aiHistory=[], currentSection='all', currentRole='MSS';
+
+// ── Gate ───────────────────────────────────────────────────────
+function toggleGateKey(){
+  const i=document.getElementById('gate-input'),b=document.getElementById('gate-toggle');
+  i.type=i.type==='password'?'text':'password'; b.textContent=i.type==='password'?'Show':'Hide';
+}
+async function submitGate(){
+  const key=document.getElementById('gate-input').value.trim();
+  const err=document.getElementById('gate-err'),btn=document.getElementById('gate-btn');
+  err.style.display='none';
+  if(!key.startsWith('sk-ant-')){err.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Verifying...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:10,messages:[{role:'user',content:'hi'}]})});
+    if(r.status===401)throw new Error('Unauthorized');
+    API_KEY=key;
+    document.getElementById('gate').style.display='none';
+    initApp();
+  }catch(e){
+    err.textContent='Could not verify key. Check and try again.';
+    err.style.display='block';btn.disabled=false;btn.textContent='Launch Donor Flow';
+  }
+}
+document.getElementById('gate-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitGate();});
+
+// ── Claude API ─────────────────────────────────────────────────
+async function claude(messages, system){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system,messages})});
+  const d=await r.json();
+  return d.content?.[0]?.text||'Unable to respond.';
+}
+
+function queueCtx(){
+  return {role:currentRole,fastPassQueue:fpQueue.map(d=>({name:d.name,type:d.type,phone:d.phone,serving:d.serving,section:d.section,waitMin:getWaitMin(d,fpQueue.filter(x=>!x.serving).indexOf(d))})),regularQueue:regQueue.map(d=>({name:d.name,type:d.type,phone:d.phone,serving:d.serving,section:d.section,waitMin:getWaitMin(d,regQueue.filter(x=>!x.serving).indexOf(d))})),peQueue:peQueue.map(d=>({name:d.name,type:d.type,serving:d.serving})),bedsAvailable,time:new Date().toLocaleTimeString()};
+}
+
+// ── AI Panel ───────────────────────────────────────────────────
+async function askAI(){
+  const inp=document.getElementById('ai-input');
+  const q=inp.value.trim(); if(!q)return;
+  inp.value='';
+  setAIStatus(true);
+  addAIMsg(q,'user');
+  const thinking=addThinking();
+  aiHistory.push({role:'user',content:q});
+  const sys=`You are an expert AI assistant for BioLife Donor Flow queue management system.\n\nCurrent state:\n${JSON.stringify(queueCtx(),null,2)}\n\nBusiness rules:\n- Priority order: FastPass > New Donor > SPE > Regular\n- Zipper merge: alternate FP and Regular when calling to sections\n- Only MSS and BAM can move/transfer donors. MH cannot.\n- Phlebotomist can only use Call and Done for their section.\n- ${bedsAvailable} of 8 beds/sections currently available\n\nBe concise (2-3 sentences), specific with donor names, and actionable. If the queue is empty, tell staff to use the Kiosk tab or DIS/DEP simulator.`;
+  try{
+    const reply=await claude(aiHistory,sys);
+    aiHistory.push({role:'assistant',content:reply});
+    thinking.remove(); addAIMsg(reply,'assistant');
+  }catch(e){thinking.remove();addAIMsg('Connection error. Check API key.','assistant');}
+  setAIStatus(false);
+}
+
+function setAIStatus(thinking){
+  document.getElementById('ai-dot').classList.toggle('thinking',thinking);
+  document.getElementById('ai-status-text').textContent=thinking?'Thinking...':'Ready';
+  document.getElementById('ai-send').disabled=thinking;
+}
+
+function addAIMsg(text,role){
+  const c=document.getElementById('ai-msgs');
+  const d=document.createElement('div');
+  d.className='ai-msg '+role; d.textContent=text;
+  c.appendChild(d); c.scrollTop=c.scrollHeight; return d;
+}
+function addEventMsg(text){
+  const c=document.getElementById('ai-msgs');
+  const d=document.createElement('div');
+  d.className='ai-msg event'; d.textContent='⚡ '+text;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+function addThinking(){
+  const c=document.getElementById('ai-msgs');
+  const d=document.createElement('div');
+  d.className='ai-thinking';
+  d.innerHTML='Thinking <span class="dots"><span>.</span><span>.</span><span>.</span></span>';
+  c.appendChild(d); c.scrollTop=c.scrollHeight; return d;
+}
+
+// ── DIS/DEP Simulator ──────────────────────────────────────────
+const simNames=['Jordan B.','Keisha R.','Omar T.','Lily C.','Marcus D.'];
+let simIdx=0;
+async function simEvent(type){
+  const name=simNames[simIdx%simNames.length]; simIdx++;
+  const phone='('+Math.floor(300+Math.random()*600)+') '+Math.floor(200+Math.random()*700)+'-'+Math.floor(1000+Math.random()*8999);
+  if(type==='edq'){
+    const donor={id:nextId++,name,type:'Donation',phone,section:null,serving:false,joinedAt:Date.now()};
+    regQueue.push(donor); renderAll();
+    addEventMsg(`DIS/EDQ: ${name} completed screening → auto-added to Regular queue`);
+    showToast(name+' auto-added via EDQ','info');
+  } else if(type==='fastpass'){
+    const donor={id:nextId++,name,type:'Fast Pass',phone,section:null,serving:false,joinedAt:Date.now()};
+    fpQueue.push(donor); renderAll();
+    addEventMsg(`DEP: FastPass activated for ${name} → added to FastPass lane`);
+    showToast(name+' FastPass activated via DEP','info');
+  } else if(type==='bed'){
+    bedsAvailable=Math.min(8,bedsAvailable+1);
+    renderAll(); addEventMsg(`DIS: Bed/section freed → ${bedsAvailable}/8 now available`);
+    showToast('Bed available signal from DIS','info');
+  } else if(type==='new'){
+    const donor={id:nextId++,name,type:'New Donor',phone,section:null,serving:false,joinedAt:Date.now()};
+    regQueue.push(donor); renderAll();
+    addEventMsg(`DIS: New donor ${name} checked in → added to Regular queue`);
+    showToast(name+' — new donor added via DIS','info');
+  } else if(type==='disconnect'){
+    const serving=[...fpQueue,...regQueue].find(d=>d.serving);
+    if(serving){
+      if(fpQueue.find(d=>d.id===serving.id))fpQueue=fpQueue.filter(d=>d.id!==serving.id);
+      else regQueue=regQueue.filter(d=>d.id!==serving.id);
+      bedsAvailable=Math.min(8,bedsAvailable+1);
+      renderAll(); addEventMsg(`DIS: ${serving.name} disconnected → bed freed, removed from display`);
+      showToast(serving.name+' disconnected — bed freed','info');
+    } else { showToast('No donor currently being served','error'); }
+  }
+  refreshTVInsight();
+}
+
+// ── Queue Actions ──────────────────────────────────────────────
+function canManage(){return currentRole==='MSS'||currentRole==='BAM';}
+function canCall(){return currentRole!=='MH';}
+
+function callDonor(lane,id){
+  if(!canCall()){showToast('Your role cannot call donors','error');return;}
+  const q=lane==='fp'?fpQueue:lane==='reg'?regQueue:peQueue;
+  const d=q.find(x=>x.id===id); if(!d)return;
+  if(q.find(x=>x.serving)){showToast('Finish serving current donor first','error');return;}
+  if(bedsAvailable<=0){showToast('No beds available','error');return;}
+  d.serving=true; d.section=SECTIONS[Math.floor(Math.random()*4)];
+  bedsAvailable=Math.max(0,bedsAvailable-1);
+  renderAll(); showToast(d.name+' called to '+d.section,'success');
+  refreshTVInsight();
+}
+
+function callNextInLane(lane){
+  if(!canCall()){showToast('Your role cannot call donors','error');return;}
+  const q=lane==='fp'?fpQueue:regQueue;
+  const next=q.find(x=>!x.serving); if(!next){showToast('No donors waiting in this lane','error');return;}
+  callDonor(lane,next.id);
+}
+
+function finishServing(lane,id){
+  if(lane==='fp')fpQueue=fpQueue.filter(x=>x.id!==id);
+  else if(lane==='reg')regQueue=regQueue.filter(x=>x.id!==id);
+  else peQueue=peQueue.filter(x=>x.id!==id);
+  bedsAvailable=Math.min(8,bedsAvailable+1);
+  renderAll(); showToast('Donor done — bed freed','success');
+  refreshTVInsight();
+}
+
+function removeDonor(lane,id){
+  if(!canManage()){showToast('Your role cannot remove donors','error');return;}
+  if(lane==='fp')fpQueue=fpQueue.filter(x=>x.id!==id);
+  else if(lane==='reg')regQueue=regQueue.filter(x=>x.id!==id);
+  else peQueue=peQueue.filter(x=>x.id!==id);
+  renderAll(); showToast('Donor removed from queue','info');
+}
+
+function moveUp(lane,id){
+  if(!canManage()){showToast('Your role cannot reorder donors','error');return;}
+  const q=lane==='fp'?fpQueue:regQueue;
+  const ns=q.filter(x=>!x.serving);
+  const idx=ns.findIndex(x=>x.id===id);
+  if(idx<=0){showToast('Already at top of queue','info');return;}
+  const ai=q.findIndex(x=>x.id===id);
+  const bi=q.findIndex(x=>x.id===ns[idx-1].id);
+  [q[ai],q[bi]]=[q[bi],q[ai]];
+  renderAll(); showToast('Donor moved up','success');
+}
+
+function openTransfer(lane,id){
+  if(!canManage()){showToast('Your role cannot transfer donors','error');return;}
+  const q=lane==='fp'?fpQueue:lane==='reg'?regQueue:peQueue;
+  const d=q.find(x=>x.id===id); if(!d)return;
+  transferDonorId=id; transferFromLane=lane;
+  document.getElementById('transfer-donor-name').textContent=d.name;
+  const opts=document.getElementById('transfer-opts'); opts.innerHTML='';
+  const lanes=[{id:'fp',label:'FastPass Lane',color:'var(--blue)'},{id:'reg',label:'Regular Lane',color:'var(--green)'},{id:'pe',label:'PE / Screening Lane',color:'var(--amber)'}];
+  lanes.filter(l=>l.id!==lane).forEach(l=>{
+    const div=document.createElement('div');
+    div.className='transfer-opt';
+    div.innerHTML=`<div style="width:10px;height:10px;border-radius:50%;background:${l.color}"></div><div style="font-size:13px;font-weight:500">${l.label}</div>`;
+    div.onclick=()=>{document.querySelectorAll('.transfer-opt').forEach(o=>o.classList.remove('selected'));div.classList.add('selected');div.dataset.target=l.id;};
+    div.dataset.target=l.id;
+    opts.appendChild(div);
+  });
+  document.getElementById('transfer-modal').classList.add('open');
+}
+
+function confirmTransfer(){
+  const selected=document.querySelector('.transfer-opt.selected');
+  if(!selected){showToast('Select a destination lane','error');return;}
+  const target=selected.dataset.target;
+  let donor;
+  if(transferFromLane==='fp'){donor=fpQueue.find(x=>x.id===transferDonorId);fpQueue=fpQueue.filter(x=>x.id!==transferDonorId);}
+  else if(transferFromLane==='reg'){donor=regQueue.find(x=>x.id===transferDonorId);regQueue=regQueue.filter(x=>x.id!==transferDonorId);}
+  else{donor=peQueue.find(x=>x.id===transferDonorId);peQueue=peQueue.filter(x=>x.id!==transferDonorId);}
+  if(!donor)return;
+  donor.serving=false; donor.section=null;
+  if(target==='fp')fpQueue.push(donor);
+  else if(target==='reg')regQueue.push(donor);
+  else peQueue.push(donor);
+  closeTransfer(); renderAll();
+  showToast(donor.name+' transferred to '+selected.querySelector('div:last-child').textContent,'success');
+}
+function closeTransfer(){document.getElementById('transfer-modal').classList.remove('open');}
+
+// ── Add Modal ──────────────────────────────────────────────────
+async function openAdd(lane){
+  if(!canManage()&&lane!=='fp'){showToast('Your role cannot manually add donors','error');return;}
+  addingTo=lane;
+  document.getElementById('add-modal-title').textContent='Add donor to '+(lane==='fp'?'FastPass':lane==='pe'?'PE/Screening':'Regular')+' queue';
+  document.getElementById('add-name').value='';
+  document.getElementById('add-phone').value='';
+  document.getElementById('add-hint').style.display='none';
+  document.getElementById('add-modal').classList.add('open');
+  const btn=document.getElementById('add-confirm-btn'); btn.disabled=true;
+  try{
+    const hint=await claude([{role:'user',content:`Staff (${currentRole}) manually adding donor to ${lane} queue. State: ${fpQueue.length} FP, ${regQueue.length} regular, ${peQueue.length} PE, ${bedsAvailable} beds free. Give a 1-sentence operational tip.`}],'You are a BioLife queue expert. Be brief.');
+    document.getElementById('add-hint').textContent=hint;
+    document.getElementById('add-hint').style.display='block';
+  }catch(e){}
+  btn.disabled=false;
+}
+function closeAdd(){document.getElementById('add-modal').classList.remove('open');}
+async function confirmAdd(){
+  const name=document.getElementById('add-name').value.trim();
+  if(!name){showToast('Enter a donor name','error');return;}
+  const type=document.getElementById('add-type').value;
+  const phone=document.getElementById('add-phone').value.trim()||'—';
+  const donor={id:nextId++,name,type,phone,section:null,serving:false,joinedAt:Date.now()};
+  if(type==='Fast Pass'||addingTo==='fp')fpQueue.push(donor);
+  else if(addingTo==='pe')peQueue.push(donor);
+  else regQueue.push(donor);
+  closeAdd(); renderAll(); showToast(name+' added to queue','success');
+  refreshTVInsight();
+}
+
+// ── Kiosk ──────────────────────────────────────────────────────
+function switchKioskTab(mode,btn){
+  document.querySelectorAll('.ktab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  document.getElementById('ktab-name').style.display=mode==='name'?'block':'none';
+  document.getElementById('ktab-qr').style.display=mode==='qr'?'block':'none';
+  document.getElementById('ktab-success').style.display='none';
+}
+
+async function kioskJoin(){
+  const first=document.getElementById('k-first').value.trim();
+  const last=document.getElementById('k-last').value.trim();
+  const phone=document.getElementById('k-phone').value.trim();
+  const type=document.getElementById('k-type').value;
+  const sms=document.getElementById('k-sms').checked;
+  if(!first){showToast('Enter first name','error');return;}
+  const name=first+(last?' '+last.toUpperCase()+'.':'');
+  const btn=document.getElementById('kiosk-join-btn');
+  btn.disabled=true; btn.textContent='Joining...';
+  const donor={id:nextId++,name,type,phone:phone||'—',section:null,serving:false,joinedAt:Date.now()};
+  regQueue.push(donor); renderAll();
+  const msgEl=document.getElementById('k-ai-msg');
+  msgEl.style.display='block'; msgEl.textContent='Getting personalized message...';
+  try{
+    const pos=regQueue.filter(d=>!d.serving).length;
+    const reply=await claude([{role:'user',content:`Donor ${name} (${type}) joined Regular queue at position ${pos}. FP ahead: ${fpQueue.length}. Regular ahead: ${regQueue.length-1}. Beds: ${bedsAvailable}. SMS opted in: ${sms}. Write a warm, specific 2-sentence welcome — include estimated wait and next steps.`}],'You are a friendly queue assistant at BioLife plasma center. Be warm and brief.');
+    msgEl.textContent=reply;
+  }catch(e){msgEl.textContent='Welcome! You have joined the queue. Please watch the TV display for your number.';}
+  document.getElementById('ktab-name').style.display='none';
+  document.getElementById('ktab-success').style.display='block';
+  document.getElementById('s-pos').textContent=regQueue.filter(d=>!d.serving).length;
+  document.getElementById('s-lane').textContent='Regular lane';
+  document.getElementById('s-msg').textContent=sms&&phone?`SMS updates will be sent to ${phone}`:'Watch the TV screen for your queue position.';
+  document.getElementById('s-ai').textContent=msgEl.textContent;
+  btn.disabled=false; btn.textContent='Join queue';
+}
+
+async function simulateFPScan(){
+  const name=DONOR_NAMES[Math.floor(Math.random()*DONOR_NAMES.length)];
+  const btn=document.getElementById('fp-scan-btn');
+  btn.disabled=true; btn.textContent='Processing scan...';
+  const phone='('+Math.floor(300+Math.random()*600)+') '+Math.floor(200+Math.random()*700)+'-'+Math.floor(1000+Math.random()*8999);
+  const donor={id:nextId++,name,type:'Fast Pass',phone,section:null,serving:false,joinedAt:Date.now()};
+  fpQueue.push(donor); renderAll();
+  const msgEl=document.getElementById('k-fp-ai-msg');
+  msgEl.style.display='block'; msgEl.textContent='Activating FastPass...';
+  try{
+    const pos=fpQueue.filter(d=>!d.serving).length;
+    const reply=await claude([{role:'user',content:`FastPass donor ${name} scanned their pass. Position ${pos} in FP lane. ${bedsAvailable} beds available. Write a brief enthusiastic 1-2 sentence confirmation — tell them they have priority access and what to expect.`}],'You are a friendly queue assistant at BioLife. Be enthusiastic and brief.');
+    msgEl.textContent=reply;
+  }catch(e){msgEl.textContent='Your FastPass is activated! You have priority access. Please wait for your section to be called.';}
+  document.getElementById('ktab-qr').style.display='none';
+  document.getElementById('ktab-success').style.display='block';
+  document.getElementById('s-pos').textContent=fpQueue.filter(d=>!d.serving).length;
+  document.getElementById('s-lane').textContent='FastPass priority lane';
+  document.getElementById('s-msg').textContent='You have priority access via FastPass.';
+  document.getElementById('s-ai').textContent=msgEl.textContent;
+  btn.disabled=false; btn.textContent='Simulate FastPass scan';
+}
+
+function resetKiosk(){
+  ['k-first','k-last','k-phone'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('k-sms').checked=false;
+  document.getElementById('k-type').value='Donation';
+  document.getElementById('k-ai-msg').style.display='none';
+  document.getElementById('ktab-name').style.display='block';
+  document.getElementById('ktab-success').style.display='none';
+  document.querySelectorAll('.ktab')[0].classList.add('active');
+  document.querySelectorAll('.ktab')[1].classList.remove('active');
+}
+
+// ── TV Insight ─────────────────────────────────────────────────
+async function refreshTVInsight(){
+  const total=fpQueue.length+regQueue.length+peQueue.length;
+  if(total===0){document.getElementById('tv-insight').style.display='none';return;}
+  try{
+    const ins=await claude([{role:'user',content:`Queue snapshot: ${fpQueue.length} FP (${fpQueue.filter(d=>d.serving).length} serving), ${regQueue.length} regular (${regQueue.filter(d=>d.serving).length} serving), ${peQueue.length} PE. Beds: ${bedsAvailable}/8. Write one concise operational status sentence for the TV display — something informative for donors or visible staff.`}],'You are a digital signage assistant for BioLife plasma center. One sentence, informative.');
+    const el=document.getElementById('tv-insight');
+    el.style.display='flex';
+    document.getElementById('tv-insight-text').textContent=ins;
+  }catch(e){}
+}
+
+// ── Section Filter ─────────────────────────────────────────────
+function switchSection(section,btn){
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  currentSection=section; renderQueues();
+}
+
+function filterBySection(q,section){
+  if(section==='all')return q;
+  if(section==='screening')return q.filter(d=>!d.serving&&!d.section);
+  const sectionName=SECTION_FILTER_MAP[section];
+  if(sectionName)return q.filter(d=>d.section===sectionName);
+  return q;
+}
+
+// ── Role Change ────────────────────────────────────────────────
+function onRoleChange(){
+  currentRole=document.getElementById('role-select').value;
+  renderQueues();
+  const restricted=currentRole==='MH';
+  document.getElementById('add-fp-btn').disabled=restricted;
+  document.getElementById('add-reg-btn').disabled=restricted;
+  document.getElementById('call-next-fp').disabled=false;
+  document.getElementById('call-next-reg').disabled=false;
+  showToast('Switched to '+currentRole+' role','info');
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function getBadgeHTML(type){
+  if(type==='Fast Pass')return '<span class="badge badge-fp">FastPass</span>';
+  if(type==='New Donor')return '<span class="badge badge-new">New</span>';
+  if(type==='SPE')return '<span class="badge badge-spe">SPE</span>';
+  return '<span class="badge badge-reg">Regular</span>';
+}
+
+function getWaitMin(d,i){
+  if(d.serving)return 0;
+  return Math.min(45,Math.max(1,i*7+Math.floor((Date.now()-d.joinedAt)/60000)));
+}
+
+function formatTime(ts){
+  return new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderDonorRow(d,lane,i,ns){
+  const ni=ns.indexOf(d);
+  const isServing=d.serving;
+  const canMgmt=canManage();
+  const sc=d.section?SECTION_CHIPS[d.section]?.split(' ')[0]||'chip-blue':'';
+  const tvsc=d.section?SECTION_CHIPS[d.section]?.split(' ')[1]||'tvs-blue':'';
+  const posCls=isServing?'pos-serving':lane==='fp'?'pos-fp':lane==='pe'?'pos-pe':'pos-reg';
+  const waitMin=getWaitMin(d,ni);
+  return `<div class="donor-row ${isServing?'serving-row':''}">
+    <div class="pos-badge ${posCls}">${isServing?'▶':ni+1}</div>
+    <div class="donor-main">
+      <div class="donor-name-row">
+        <span class="donor-name">${d.name}</span>
+        ${getBadgeHTML(d.type)}
+        ${isServing?'<span class="badge badge-serving">Serving</span>':''}
+      </div>
+      <div class="donor-detail">
+        <span class="donor-time">${formatTime(d.joinedAt)}</span>
+        <span class="donor-phone">${d.phone||'—'}</span>
+        ${d.section?`<span class="section-chip ${sc}">${d.section}</span>`:''}
+        ${!isServing?`<span class="wait-chip">~${waitMin}m wait</span>`:''}
+      </div>
+    </div>
+    <div class="row-actions">
+      ${isServing
+        ?`<button class="act-btn done" onclick="finishServing('${lane}',${d.id})">Done</button>`
+        :`${canMgmt?`<button class="act-btn" onclick="moveUp('${lane}',${d.id})">↑</button>`:''}
+          <button class="act-btn call" onclick="callDonor('${lane}',${d.id})">Call</button>
+          ${canMgmt?`<button class="act-btn transfer" onclick="openTransfer('${lane}',${d.id})">⇄</button>`:''}
+          ${canMgmt?`<button class="act-btn remove" onclick="removeDonor('${lane}',${d.id})">✕</button>`:''}`
+      }
+    </div>
+  </div>`;
+}
+
+function renderQueues(){
+  ['fp','reg'].forEach(lane=>{
+    const rawQ=lane==='fp'?fpQueue:regQueue;
+    const q=filterBySection(rawQ,currentSection);
+    const ns=q.filter(x=>!x.serving);
+    const el=document.getElementById(lane+'-queue');
+    if(!q.length){el.innerHTML='<div class="empty">No donors'+(currentSection!=='all'?' in this section':'')+'</div>';return;}
+    el.innerHTML=q.map(d=>renderDonorRow(d,lane,0,ns)).join('');
+  });
+  document.getElementById('fp-count').textContent=fpQueue.length+' donor'+(fpQueue.length!==1?'s':'');
+  document.getElementById('reg-count').textContent=regQueue.length+' donor'+(regQueue.length!==1?'s':'');
+}
+
+function renderMetrics(){
+  document.getElementById('m-total').textContent=fpQueue.length+regQueue.length+peQueue.length;
+  document.getElementById('m-fp').textContent=fpQueue.filter(d=>!d.serving).length;
+  document.getElementById('m-reg').textContent=regQueue.filter(d=>!d.serving).length;
+  document.getElementById('m-beds').textContent=bedsAvailable;
+  const rw=regQueue.filter(d=>!d.serving);
+  document.getElementById('m-wait').textContent=rw.length?Math.round(rw.length*7)+'m':'—';
+  // section counts
+  ['all','screening','blue','red','yellow','green'].forEach(s=>{
+    const el=document.getElementById('sc-'+s);
+    if(!el)return;
+    const all=[...fpQueue,...regQueue,...peQueue];
+    if(s==='all'){el.textContent=all.length;}
+    else if(s==='screening'){el.textContent=all.filter(d=>!d.serving&&!d.section).length;}
+    else{const sn=SECTION_FILTER_MAP[s];el.textContent=all.filter(d=>d.section===sn).length;}
+  });
+}
+
+function renderTV(){
+  const lanes=[{q:fpQueue,bodyId:'tv-fp-body',countId:'tv-fp-count'},{q:regQueue,bodyId:'tv-reg-body',countId:'tv-reg-count'},{q:peQueue,bodyId:'tv-pe-body',countId:'tv-pe-count'}];
+  lanes.forEach(({q,bodyId,countId})=>{
+    const el=document.getElementById(bodyId);
+    const cnt=document.getElementById(countId);
+    const waiting=q.filter(d=>!d.serving);
+    cnt.textContent=waiting.length+' waiting';
+    if(!q.length){el.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:rgba(255,255,255,.2)">No donors</div>';return;}
+    const ns=q.filter(x=>!x.serving);
+    el.innerHTML=q.map(d=>{
+      const ni=ns.indexOf(d);
+      const sc=d.section?SECTION_CHIPS[d.section]?.split(' ')[1]||'tvs-blue':'';
+      const wm=getWaitMin(d,ni);
+      return `<div class="tv-row ${d.serving?'tv-serving':''}">
+        <div class="tv-row-pos">${d.serving?'▶':ni+1}</div>
+        <div class="tv-row-info">
+          ${d.serving?'<div class="tv-serving-tag">SERVING NOW</div>':''}
+          <div class="tv-row-name">${d.name}</div>
+          ${!d.serving?`<div class="tv-row-wait">~${wm} min wait</div>`:''}
+        </div>
+        ${d.section?`<div class="tv-section-tag ${sc}">${d.section}</div>`:''}
+      </div>`;
+    }).join('');
+  });
+}
+
+function renderAll(){renderMetrics();renderQueues();renderTV();}
+
+// ── Clock ──────────────────────────────────────────────────────
+function tick(){
+  const now=new Date();
+  const el=document.getElementById('tv-clock');
+  if(el)el.textContent=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── QR Frame ──────────────────────────────────────────────────
+function buildQR(){
+  const f=document.getElementById('qr-frame'); if(!f)return;
+  let h='';
+  for(let i=0;i<49;i++){
+    const dark=Math.random()>.42;
+    h+=`<div style="background:${dark?'#1A1816':'#F0EDE8'};border-radius:1px"></div>`;
+  }
+  f.innerHTML=h;
+}
+
+// ── Init ───────────────────────────────────────────────────────
+function initApp(){
+  renderAll(); buildQR(); tick(); setInterval(tick,15000);
+  addAIMsg('Queue is live. Add donors via the Kiosk tab or the DIS/DEP Simulator buttons, then ask me anything — who to call next, role-specific guidance, wait time estimates.','system');
+}
+
+function switchView(v,tab){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tnav').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active'); tab.classList.add('active');
+  if(v==='tv')refreshTVInsight();
+}
+
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(type?' '+type:'');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>
