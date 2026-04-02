@@ -553,7 +553,7 @@ const PROXY_URL = 'https://empty-lake-7e5a.sandeepak1511.workers.dev';
 
 // ── Claude API ─────────────────────────────────────────────────
 async function claude(messages, system){
-  const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system,messages})});
+  const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-5-20250929',max_tokens:1000,system,messages})});
   const d=await r.json();
   return d.content?.[0]?.text||'Unable to respond.';
 }
