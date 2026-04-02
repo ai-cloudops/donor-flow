@@ -24,33 +24,7 @@
 }
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
 
-/* ── Gate ── */
-#gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
-.gate-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:2.5rem;width:440px;max-width:92vw;box-shadow:var(--shadow-lg)}
-.gate-logo{display:flex;align-items:center;gap:10px;margin-bottom:2rem}
-.gate-logo-icon{width:36px;height:36px;background:var(--blue);border-radius:var(--radius);display:flex;align-items:center;justify-content:center}
-.gate-logo-icon svg{width:18px;height:18px;fill:white}
-.gate-logo-name{font-size:17px;font-weight:600;color:var(--text)}
-.gate-logo-sub{font-size:12px;color:var(--text3);margin-top:1px}
-.gate-h{font-size:15px;font-weight:600;margin-bottom:6px}
-.gate-sub{font-size:13px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
-.gate-field{position:relative;margin-bottom:.75rem}
-.gate-field input{width:100%;padding:10px 48px 10px 12px;font-size:13px;font-family:var(--mono);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;transition:border .15s}
-.gate-field input:focus{border-color:var(--blue);background:var(--surface)}
-.gate-field button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:11px;color:var(--text3);cursor:pointer;padding:4px 6px;border-radius:4px;font-family:var(--font)}
-.gate-field button:hover{background:var(--surface3);color:var(--text2)}
-.gate-err{font-size:12px;color:var(--red);background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--radius);padding:8px 12px;margin-bottom:1rem;display:none}
-.gate-note{font-size:11px;color:var(--text3);margin-bottom:1.5rem;display:flex;gap:6px;line-height:1.5}
-.gate-btn{width:100%;padding:11px;font-size:14px;font-weight:600;font-family:var(--font);border-radius:var(--radius);border:none;cursor:pointer;background:var(--blue);color:white;transition:all .15s}
-.gate-btn:hover{background:#1540B0}
-.gate-btn:disabled{opacity:.5;cursor:not-allowed}
-.gate-divider{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
-.gate-steps{display:flex;flex-direction:column;gap:10px}
-.gate-step{display:flex;gap:10px;align-items:flex-start}
-.gate-step-n{width:20px;height:20px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text2);flex-shrink:0;margin-top:1px}
-.gate-step-t{font-size:12px;color:var(--text2);line-height:1.5}
-.gate-step-t a{color:var(--blue);text-decoration:none}
-.gate-step-t a:hover{text-decoration:underline}
+/* Gate removed — app loads directly */
 
 /* ── Layout ── */
 .app{display:grid;grid-template-rows:auto 1fr;min-height:100vh}
@@ -294,30 +268,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </head>
 <body>
 
-<!-- Gate -->
-<div id="gate">
-  <div class="gate-wrap">
-    <div class="gate-logo">
-      <div class="gate-logo-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <div><div class="gate-logo-name">Donor Flow</div><div class="gate-logo-sub">AI Queue Management — POC</div></div>
-    </div>
-    <div class="gate-h">Enter your Anthropic API key</div>
-    <div class="gate-sub">Powers the AI Queue Assistant, smart check-in messages, and live TV insights. Key stays in memory only — never stored.</div>
-    <div class="gate-field">
-      <input type="password" id="gate-input" placeholder="sk-ant-api03-..."/>
-      <button onclick="toggleGateKey()" id="gate-toggle">Show</button>
-    </div>
-    <div class="gate-err" id="gate-err">Invalid key — must start with sk-ant-</div>
-    <div class="gate-note"><span>🔒</span><span>Memory only. Clears on page refresh. Never sent anywhere except directly to api.anthropic.com.</span></div>
-    <button class="gate-btn" id="gate-btn" onclick="submitGate()">Launch Donor Flow</button>
-    <hr class="gate-divider"/>
-    <div class="gate-steps">
-      <div class="gate-step"><div class="gate-step-n">1</div><div class="gate-step-t">Visit <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a></div></div>
-      <div class="gate-step"><div class="gate-step-n">2</div><div class="gate-step-t">Create a new key — name it "Donor Flow POC"</div></div>
-      <div class="gate-step"><div class="gate-step-n">3</div><div class="gate-step-t">Copy and paste the key above, then click Launch</div></div>
-    </div>
-  </div>
-</div>
+<!-- App loads directly, no gate -->
 
 <!-- App -->
 <div class="app">
@@ -591,35 +542,18 @@ const DONOR_NAMES = ['Sarah M.','James T.','Priya K.','Carlos M.','Aisha W.','Be
 
 let fpQueue=[], regQueue=[], peQueue=[];
 let nextId=1, addingTo='fp', transferDonorId=null, transferFromLane=null;
-let bedsAvailable=5, API_KEY='', aiHistory=[], currentSection='all', currentRole='MSS';
+let bedsAvailable=5, aiHistory=[], currentSection='all', currentRole='MSS';
 
-// ── Gate ───────────────────────────────────────────────────────
-function toggleGateKey(){
-  const i=document.getElementById('gate-input'),b=document.getElementById('gate-toggle');
-  i.type=i.type==='password'?'text':'password'; b.textContent=i.type==='password'?'Show':'Hide';
-}
-async function submitGate(){
-  const key=document.getElementById('gate-input').value.trim();
-  const err=document.getElementById('gate-err'),btn=document.getElementById('gate-btn');
-  err.style.display='none';
-  if(!key.startsWith('sk-ant-')){err.style.display='block';return;}
-  btn.disabled=true;btn.textContent='Verifying...';
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:10,messages:[{role:'user',content:'hi'}]})});
-    if(r.status===401)throw new Error('Unauthorized');
-    API_KEY=key;
-    document.getElementById('gate').style.display='none';
-    initApp();
-  }catch(e){
-    err.textContent='Could not verify key. Check and try again.';
-    err.style.display='block';btn.disabled=false;btn.textContent='Launch Donor Flow';
-  }
-}
-document.getElementById('gate-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitGate();});
+// ── Config ─────────────────────────────────────────────────────
+// Replace this with your Cloudflare Worker URL after deploying
+const PROXY_URL = 'https://empty-lake-7e5a.sandeepak1511.workers.dev/v1/messages';
+
+
+
 
 // ── Claude API ─────────────────────────────────────────────────
 async function claude(messages, system){
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system,messages})});
+  const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system,messages})});
   const d=await r.json();
   return d.content?.[0]?.text||'Unable to respond.';
 }
@@ -1072,6 +1006,9 @@ function initApp(){
   renderAll(); buildQR(); tick(); setInterval(tick,15000);
   addAIMsg('Queue is live. Add donors via the Kiosk tab or the DIS/DEP Simulator buttons, then ask me anything — who to call next, role-specific guidance, wait time estimates.','system');
 }
+
+// Auto-launch on page load
+window.addEventListener('DOMContentLoaded', initApp);
 
 function switchView(v,tab){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
