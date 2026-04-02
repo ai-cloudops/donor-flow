@@ -3,501 +3,544 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Donor Flow — AI Queue Management</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<title>Donor Flow — BioLife Queue Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#F0EDE8;--surface:#FFFFFF;--surface2:#F7F5F2;--surface3:#EDEAE5;
-  --border:#E0DDD8;--border2:#CECBC5;
-  --text:#1A1816;--text2:#6B6560;--text3:#A09890;
-  --blue:#1B4FD8;--blue-bg:#EEF2FF;--blue-light:#DBEAFE;
-  --green:#0D7A4E;--green-bg:#ECFDF5;--green-light:#BBF7D0;
-  --amber:#B45309;--amber-bg:#FFFBEB;--amber-light:#FDE68A;
-  --red:#C5362A;--red-bg:#FEF2F2;--red-light:#FECACA;
-  --purple:#6D28D9;--purple-bg:#F5F3FF;--purple-light:#DDD6FE;
-  --teal:#0F766E;--teal-bg:#F0FDFA;--teal-light:#99F6E4;
-  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --bg:#F8F9FB;--bg2:#FFFFFF;--bg3:#F3F4F6;--bg4:#EEF0F3;
+  --surface:#FFFFFF;--surface2:#F8F9FB;--surface3:#F0F2F5;
+  --border:#E5E7EB;--border2:#D1D5DB;
+  --text:#111827;--text2:#6B7280;--text3:#9CA3AF;
+  --blue:#1D4ED8;--blue-dim:#2563EB;--blue-bg:#EFF6FF;--blue-border:#BFDBFE;
+  --green:#15803D;--green-dim:#16A34A;--green-bg:#F0FDF4;--green-border:#BBF7D0;
+  --amber:#B45309;--amber-dim:#D97706;--amber-bg:#FFFBEB;--amber-border:#FDE68A;
+  --red:#B91C1C;--red-dim:#DC2626;--red-bg:#FEF2F2;--red-border:#FECACA;
+  --purple:#6D28D9;--purple-dim:#7C3AED;--purple-bg:#F5F3FF;--purple-border:#DDD6FE;
+  --teal:#0F766E;--cyan:#0369A1;--cyan-bg:#EFF6FF;
+  --radius:6px;--radius-lg:10px;--radius-xl:14px;
   --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
-  --shadow-lg:0 4px 16px rgba(0,0,0,0.1),0 2px 6px rgba(0,0,0,0.06);
-  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --shadow-lg:0 8px 24px rgba(0,0,0,0.08),0 4px 8px rgba(0,0,0,0.04);
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
 }
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;line-height:1.5}
+::selection{background:rgba(37,99,235,0.15)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg3)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-/* Gate removed — app loads directly */
+/* ── Topbar ── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:100;gap:0}
+.logo{display:flex;align-items:center;gap:10px;margin-right:32px;text-decoration:none}
+.logo-mark{width:28px;height:28px;background:linear-gradient(135deg,var(--blue-dim),var(--blue));border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:14px;height:14px;fill:white}
+.logo-name{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.logo-tag{font-size:10px;font-weight:500;color:var(--text3);background:var(--surface3);border:1px solid var(--border);padding:1px 6px;border-radius:4px;margin-left:2px}
+.nav{display:flex;align-items:stretch;gap:0;flex:1}
+.ntab{padding:0 14px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;height:52px;letter-spacing:.1px}
+.ntab svg{width:13px;height:13px;opacity:.7}
+.ntab:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.ntab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.ntab.active svg{opacity:1}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.center-select{font-size:11px;font-weight:500;padding:5px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:var(--font)}
+.role-pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);font-size:11px;font-weight:500}
+.role-pill select{background:none;border:none;color:var(--text2);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;outline:none}
+.live-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--radius);background:var(--green-bg);border:1px solid var(--green-border);font-size:11px;font-weight:600;color:var(--green)}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-time{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.5px}
 
 /* ── Layout ── */
-.app{display:grid;grid-template-rows:auto 1fr;min-height:100vh}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;gap:0;position:sticky;top:0;z-index:50}
-.topbar-logo{display:flex;align-items:center;gap:8px;padding:12px 0;margin-right:2rem}
-.topbar-logo-icon{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center}
-.topbar-logo-icon svg{width:14px;height:14px;fill:white}
-.topbar-logo-name{font-size:15px;font-weight:600;color:var(--text)}
-.topbar-nav{display:flex;align-items:stretch;gap:0;flex:1}
-.tnav{padding:0 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;transition:all .15s;height:48px;white-space:nowrap}
-.tnav:hover{color:var(--text)}
-.tnav.active{color:var(--blue);border-bottom-color:var(--blue)}
-.tnav svg{width:14px;height:14px}
-.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
-.role-select{font-size:12px;font-weight:500;padding:5px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;font-family:var(--font)}
-.live-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--green);background:var(--green-bg);border:1px solid var(--green-light);padding:4px 10px;border-radius:20px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
-.view{display:none;padding:1.5rem;animation:fadeIn .2s ease}
+.view{display:none;padding:20px;animation:fadein .18s ease}
 .view.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadein{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── Metrics ── */
-.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:1.25rem}
-.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:.875rem 1rem}
-.metric-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.metric-value{font-size:22px;font-weight:600;color:var(--text);line-height:1}
-.metric-sub{font-size:11px;color:var(--text3);margin-top:4px}
-.metric.alert .metric-value{color:var(--red)}
-.metric.good .metric-value{color:var(--green)}
+/* ── Stat Bar ── */
+.statbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat.s-blue::before{background:var(--blue)}
+.stat.s-green::before{background:var(--green)}
+.stat.s-amber::before{background:var(--amber)}
+.stat.s-red::before{background:var(--red)}
+.stat.s-purple::before{background:var(--purple)}
+.stat-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.stat-val{font-size:26px;font-weight:700;color:var(--text);line-height:1;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.stat-trend{position:absolute;top:14px;right:14px;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
+.trend-up{background:var(--green-bg);color:var(--green)}
+.trend-warn{background:var(--amber-bg);color:var(--amber)}
 
 /* ── Section Tabs ── */
-.section-tabs{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap}
-.stab{padding:6px 14px;font-size:12px;font-weight:500;border-radius:20px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
-.stab:hover{background:var(--surface3)}
-.stab.active{background:var(--blue);color:white;border-color:var(--blue)}
-.stab .stab-count{font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:rgba(255,255,255,.25)}
-.stab:not(.active) .stab-count{background:var(--surface3);color:var(--text2)}
+.section-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.section-bar-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-right:4px}
+.stab{padding:5px 12px;font-size:11px;font-weight:500;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.stab:hover{background:var(--surface3);color:var(--text);border-color:var(--border2)}
+.stab.active{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.stab-n{font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--surface3);color:var(--text3)}
+.stab.active .stab-n{background:rgba(56,139,253,.2);color:var(--blue)}
 
-/* ── Queue Grid ── */
-.queue-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
-.queue-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
-.queue-card.fp-card{border-top:3px solid var(--blue)}
-.queue-card.reg-card{border-top:3px solid var(--green)}
-.queue-card.pe-card{border-top:3px solid var(--amber)}
-.queue-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
-.queue-head-left{display:flex;align-items:center;gap:8px}
-.queue-lane-dot{width:8px;height:8px;border-radius:50%}
-.queue-title{font-size:13px;font-weight:600;color:var(--text)}
-.queue-count{font-size:11px;color:var(--text3)}
-.queue-body{overflow:hidden}
+/* ── Queue Layout ── */
+.queue-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.qcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column}
+.qcard-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.qcard-head-l{display:flex;align-items:center;gap:8px}
+.lane-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.4px;text-transform:uppercase}
+.lb-fp{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.lb-reg{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.lb-pe{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.qcard-title{font-size:13px;font-weight:600;color:var(--text)}
+.qcard-count{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
+.qcard-body{flex:1}
+.qcard-foot{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:6px;background:var(--surface2)}
 
-/* ── Donor Row ── */
-.donor-row{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;transition:background .1s;cursor:default}
-.donor-row:last-child{border-bottom:none}
-.donor-row:hover{background:var(--surface2)}
-.donor-row.serving-row{background:var(--green-bg)}
-.donor-row.serving-row:hover{background:#DCFCE7}
-.pos-badge{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
-.pos-fp{background:var(--blue-light);color:var(--blue)}
-.pos-reg{background:var(--surface3);color:var(--text2)}
-.pos-serving{background:var(--green-light);color:var(--green)}
-.pos-pe{background:var(--amber-light);color:var(--amber)}
-.donor-main{flex:1;min-width:0}
-.donor-name-row{display:flex;align-items:center;gap:5px;margin-bottom:2px}
-.donor-name{font-size:13px;font-weight:600;color:var(--text)}
-.donor-detail{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:8px}
-.donor-time{font-family:var(--mono);font-size:10px;color:var(--text3)}
-.donor-phone{font-family:var(--mono);font-size:10px;color:var(--text3)}
-.section-chip{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
-.chip-blue{background:var(--blue-light);color:var(--blue)}
-.chip-red{background:var(--red-light);color:var(--red)}
-.chip-yellow{background:var(--amber-light);color:var(--amber)}
-.chip-green{background:var(--green-light);color:var(--green)}
-.chip-purple{background:var(--purple-light);color:var(--purple)}
-.wait-chip{font-size:10px;color:var(--text3)}
-.badge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
-.badge-fp{background:var(--blue-bg);color:var(--blue)}
-.badge-new{background:var(--green-bg);color:var(--green)}
-.badge-spe{background:var(--amber-bg);color:var(--amber)}
-.badge-reg{background:var(--surface3);color:var(--text2)}
-.badge-serving{background:var(--green-light);color:var(--green)}
-.row-actions{display:flex;gap:4px;flex-shrink:0}
-.act-btn{font-size:11px;font-weight:500;padding:4px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .15s;font-family:var(--font)}
-.act-btn:hover{background:var(--surface3);color:var(--text)}
-.act-btn.call{background:var(--blue);color:white;border-color:var(--blue)}
-.act-btn.call:hover{background:#1540B0}
-.act-btn.done{background:var(--green);color:white;border-color:var(--green)}
-.act-btn.done:hover{background:#0A6340}
-.act-btn.remove{color:var(--red)}
-.act-btn.remove:hover{background:var(--red-bg);border-color:var(--red-light)}
-.act-btn.transfer{color:var(--purple)}
-.act-btn.transfer:hover{background:var(--purple-bg);border-color:var(--purple-light)}
-.act-btn:disabled{opacity:.4;cursor:not-allowed}
-.add-row{padding:8px 14px;border-top:1px dashed var(--border2);display:flex;gap:6px}
-.add-btn{flex:1;padding:7px;font-size:12px;font-weight:500;font-family:var(--font);border:1px dashed var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s}
-.add-btn:hover{background:var(--surface2);color:var(--text)}
+/* ── Donor Rows ── */
+.drow{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;transition:background .1s}
+.drow:last-child{border-bottom:none}
+.drow:hover{background:var(--bg3)}
+.drow.serving{background:#F0FDF4;border-left:2px solid var(--green)}
+.drow.serving:hover{background:#DCFCE7}
+.pos{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;font-family:var(--mono)}
+.pos-fp{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.pos-reg{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.pos-pe{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.pos-srv{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.dmain{flex:1;min-width:0}
+.dname-row{display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap}
+.dname{font-size:13px;font-weight:600;color:var(--text)}
+.tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.3px;text-transform:uppercase}
+.tag-fp{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.tag-new{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.tag-spe{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.tag-reg{background:var(--surface3);color:var(--text3);border:1px solid var(--border)}
+.tag-srv{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.dmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dmeta-item{font-size:10px;color:var(--text3);font-family:var(--mono);display:flex;align-items:center;gap:3px}
+.dmeta-item svg{width:9px;height:9px;opacity:.6}
+.sec-chip{font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px}
+.sc-blue{background:rgba(121,192,255,.15);color:var(--cyan);border:1px solid rgba(121,192,255,.3)}
+.sc-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.sc-yellow{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.sc-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.sc-purple{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.dactions{display:flex;gap:4px;flex-shrink:0}
+.abtn{font-size:11px;font-weight:500;padding:4px 9px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .12s;font-family:var(--font);white-space:nowrap}
+.abtn:hover{border-color:var(--border2);color:var(--text);background:var(--surface3)}
+.abtn.call{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.abtn.call:hover{background:var(--blue-dim);color:white;border-color:var(--blue-dim)}
+.abtn.done{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.abtn.done:hover{background:var(--green-dim);color:white;border-color:var(--green-dim)}
+.abtn.danger{color:var(--red)}
+.abtn.danger:hover{background:var(--red-bg);border-color:var(--red-border)}
+.abtn.xfer{color:var(--purple)}
+.abtn.xfer:hover{background:var(--purple-bg);border-color:var(--purple-border)}
+.abtn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+.fadd{padding:7px 12px;font-size:11px;font-weight:500;font-family:var(--font);border:1px dashed var(--border2);border-radius:var(--radius);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;flex:1}
+.fadd:hover{background:var(--surface3);color:var(--text2);border-color:var(--border2)}
+.fcall{padding:7px 12px;font-size:11px;font-weight:600;font-family:var(--font);border:1px solid var(--blue-border);border-radius:var(--radius);background:var(--blue-bg);color:var(--blue);cursor:pointer;transition:all .15s;white-space:nowrap}
+.fcall:hover{background:var(--blue-dim);color:white;border-color:var(--blue-dim)}
+.empty-state{padding:28px 20px;text-align:center}
+.empty-state p{font-size:12px;color:var(--text3);margin-top:6px}
+
+/* ── Simulator Panel ── */
+.sim-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px}
+.panel-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.panel-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pi-amber{background:var(--amber-bg);border:1px solid var(--amber-border)}
+.pi-blue{background:var(--blue-bg);border:1px solid var(--blue-border)}
+.panel-title{font-size:13px;font-weight:600;color:var(--text)}
+.panel-sub{font-size:11px;color:var(--text3);margin-left:auto}
+.sim-btns{display:flex;gap:7px;flex-wrap:wrap}
+.sbtn{padding:6px 12px;font-size:11px;font-weight:500;font-family:var(--font);border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.sbtn:hover{border-color:var(--border2);color:var(--text);background:var(--surface3)}
+.sbtn.fire{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
+.sbtn.fire:hover{background:var(--amber-dim);color:white;border-color:var(--amber-dim)}
+.sbtn svg{width:11px;height:11px}
 
 /* ── AI Panel ── */
-.ai-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-top:1rem}
-.ai-head{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
-.ai-icon{width:24px;height:24px;border-radius:6px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center}
-.ai-icon svg{width:13px;height:13px}
-.ai-title{font-size:13px;font-weight:600;color:var(--text)}
-.ai-status{font-size:11px;color:var(--text3);margin-left:auto;display:flex;align-items:center;gap:5px}
-.ai-status-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
-.ai-status-dot.thinking{background:var(--amber);animation:pulse .6s infinite}
-.ai-row{display:flex;gap:8px}
-.ai-input{flex:1;padding:8px 12px;font-size:13px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none}
-.ai-input:focus{border-color:var(--blue);background:var(--surface)}
-.ai-send{padding:8px 14px;font-size:12px;font-weight:600;font-family:var(--font);border-radius:var(--radius);border:none;background:var(--blue);color:white;cursor:pointer;transition:background .15s}
-.ai-send:hover{background:#1540B0}
-.ai-send:disabled{opacity:.5;cursor:not-allowed}
-.ai-msgs{margin-top:.75rem;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
-.ai-msg{font-size:12px;line-height:1.6;padding:7px 10px;border-radius:var(--radius)}
-.ai-msg.user{background:var(--surface2);color:var(--text);align-self:flex-end;max-width:75%}
-.ai-msg.assistant{background:var(--blue-bg);color:#1E3A8A;align-self:flex-start;max-width:88%}
-.ai-msg.system{background:var(--green-bg);color:#065F46;font-size:11px}
-.ai-msg.event{background:var(--amber-bg);color:#92400E;font-size:11px;font-style:italic}
-.ai-thinking{font-size:11px;color:var(--text3);padding:4px 0;display:flex;align-items:center;gap:5px}
-.dots span{animation:dbounce 1s infinite;display:inline-block}
-.dots span:nth-child(2){animation-delay:.2s}
-.dots span:nth-child(3){animation-delay:.4s}
-@keyframes dbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-
-/* ── DIS/DEP Simulator ── */
-.sim-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-top:1rem}
-.sim-head{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
-.sim-title{font-size:13px;font-weight:600;color:var(--text)}
-.sim-sub{font-size:11px;color:var(--text3);margin-left:auto}
-.sim-btns{display:flex;gap:8px;flex-wrap:wrap}
-.sim-btn{padding:6px 14px;font-size:12px;font-weight:500;font-family:var(--font);border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
-.sim-btn:hover{background:var(--surface3);color:var(--text)}
-.sim-btn.fire{background:var(--amber-bg);border-color:var(--amber-light);color:var(--amber)}
-.sim-btn.fire:hover{background:var(--amber-light)}
-.sim-btn svg{width:12px;height:12px}
+.ai-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px}
+.ai-row{display:flex;gap:8px;margin-bottom:10px}
+.ai-inp{flex:1;padding:8px 12px;font-size:12px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;transition:border .15s}
+.ai-inp:focus{border-color:var(--blue);background:var(--surface)}
+.ai-inp::placeholder{color:var(--text3)}
+.ai-go{padding:8px 14px;font-size:12px;font-weight:600;font-family:var(--font);border-radius:var(--radius);border:none;background:var(--blue-dim);color:white;cursor:pointer;transition:background .15s;white-space:nowrap}
+.ai-go:hover{background:var(--blue)}
+.ai-go:disabled{opacity:.4;cursor:not-allowed}
+.ai-feed{max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
+.amsg{font-size:12px;line-height:1.6;padding:7px 10px;border-radius:var(--radius)}
+.amsg.user{background:var(--surface3);color:var(--text);align-self:flex-end;max-width:72%;border:1px solid var(--border)}
+.amsg.assistant{background:var(--blue-bg);color:#1E40AF;align-self:flex-start;max-width:88%;border:1px solid var(--blue-border)}
+.amsg.system{background:var(--green-bg);color:#166534;font-size:11px;border:1px solid var(--green-border)}
+.amsg.event{background:var(--amber-bg);color:#92400E;font-size:11px;font-style:italic;border:1px solid var(--amber-border)}
+.athink{font-size:11px;color:var(--text3);padding:4px 0;display:flex;align-items:center;gap:5px}
+.dots span{animation:db 1s infinite;display:inline-block}
+.dots span:nth-child(2){animation-delay:.18s}
+.dots span:nth-child(3){animation-delay:.36s}
+@keyframes db{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.ai-status{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)}
+.asdot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
+.asdot.busy{background:var(--amber);animation:blink .5s infinite}
 
 /* ── Kiosk ── */
-.kiosk-wrap{max-width:460px;margin:0 auto}
+.kiosk-outer{max-width:480px;margin:0 auto}
 .kiosk-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg)}
-.kiosk-header{background:var(--blue);padding:1.75rem 2rem;text-align:center}
-.kiosk-header h2{font-size:18px;font-weight:600;color:white;margin-bottom:4px}
-.kiosk-header p{font-size:13px;color:rgba(255,255,255,.75)}
-.kiosk-body{padding:1.75rem 2rem}
-.tab-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:3px;margin-bottom:1.5rem;gap:2px}
-.ktab{flex:1;padding:7px;font-size:12px;font-weight:500;font-family:var(--font);border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s}
-.ktab.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
-.field{margin-bottom:1rem}
-.field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
-.field input,.field select{width:100%;padding:9px 12px;font-size:14px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;transition:border .15s}
-.field input:focus,.field select:focus{border-color:var(--blue)}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kiosk-hdr{background:linear-gradient(135deg,#0D2040 0%,#0F2B52 60%,#122C5E 100%);padding:28px 28px 24px;border-bottom:1px solid rgba(56,139,253,.2);position:relative;overflow:hidden}
+.kiosk-hdr::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(56,139,253,.06);border:1px solid rgba(56,139,253,.1)}
+.kiosk-hdr::after{content:'';position:absolute;bottom:-20px;right:40px;width:80px;height:80px;border-radius:50%;background:rgba(56,139,253,.04)}
+.kiosk-hdr-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.kiosk-hdr-icon{width:36px;height:36px;background:var(--blue-dim);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.kiosk-hdr-icon svg{width:18px;height:18px;fill:white}
+.kiosk-hdr-brand{font-size:16px;font-weight:700;color:white;letter-spacing:-.2px}
+.kiosk-hdr-sub{font-size:12px;color:rgba(255,255,255,.5)}
+.kiosk-hdr h2{font-size:20px;font-weight:700;color:white;letter-spacing:-.3px;margin-bottom:4px;position:relative}
+.kiosk-hdr p{font-size:13px;color:rgba(255,255,255,.6);position:relative}
+.kiosk-body{padding:24px 28px}
+.ktabs{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:3px;gap:2px;margin-bottom:20px}
+.ktab{flex:1;padding:7px 10px;font-size:12px;font-weight:500;font-family:var(--font);border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s}
+.ktab.active{background:var(--surface3);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.field input,.field select{width:100%;padding:9px 12px;font-size:13px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;transition:border .15s}
+.field input:focus,.field select:focus{border-color:var(--blue);background:var(--surface)}
+.field input::placeholder{color:var(--text3)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .opt-row{display:flex;align-items:center;gap:8px;margin:.5rem 0}
-.opt-row input{width:15px;height:15px;accent-color:var(--blue)}
-.opt-row label{font-size:13px;color:var(--text2)}
-.kbtn{width:100%;padding:12px;font-size:14px;font-weight:600;font-family:var(--font);border-radius:var(--radius);border:none;cursor:pointer;transition:all .15s;margin-top:.5rem}
-.kbtn.primary{background:var(--blue);color:white}
-.kbtn.primary:hover{background:#1540B0}
-.kbtn:disabled{opacity:.5;cursor:not-allowed}
-.ai-welcome{margin-top:1rem;padding:12px;background:var(--blue-bg);border:1px solid var(--blue-light);border-radius:var(--radius);font-size:13px;color:#1E3A8A;line-height:1.6;display:none}
-.success-body{padding:2rem;text-align:center}
-.success-circle{width:64px;height:64px;border-radius:50%;background:var(--green-bg);border:2px solid var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
-.success-circle svg{width:28px;height:28px;stroke:var(--green);fill:none;stroke-width:2.5}
-.success-pos-wrap{margin:1rem 0;padding:1rem;background:var(--surface2);border-radius:var(--radius-lg);border:1px solid var(--border)}
-.success-pos{font-size:52px;font-weight:700;color:var(--blue);line-height:1}
-.success-lane{font-size:13px;color:var(--text2);margin-top:4px}
-.success-msg{font-size:13px;color:var(--text2);line-height:1.6;margin-top:.75rem}
-.success-ai{margin-top:1rem;padding:12px;background:var(--blue-bg);border-radius:var(--radius);font-size:12px;color:#1E3A8A;line-height:1.6;text-align:left}
-.qr-area{text-align:center;padding:1.5rem 0}
-.qr-frame{width:140px;height:140px;margin:0 auto 1rem;border:2px solid var(--border2);border-radius:var(--radius-lg);display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:8px;background:var(--surface)}
+.opt-row input{accent-color:var(--blue);width:14px;height:14px}
+.opt-row label{font-size:12px;color:var(--text2)}
+.kbtn{width:100%;padding:11px;font-size:13px;font-weight:600;font-family:var(--font);border-radius:var(--radius);border:none;cursor:pointer;transition:all .15s;margin-top:4px}
+.kbtn.primary{background:var(--blue-dim);color:white}
+.kbtn.primary:hover{background:var(--blue)}
+.kbtn:disabled{opacity:.4;cursor:not-allowed}
+.ai-welcome{margin-top:12px;padding:10px 12px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);font-size:12px;color:#1E40AF;line-height:1.6;display:none}
+.success-wrap{padding:28px;text-align:center}
+.success-ring{width:64px;height:64px;border-radius:50%;background:var(--green-bg);border:2px solid var(--green-border);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.success-ring svg{width:26px;height:26px;stroke:var(--green);fill:none;stroke-width:2.5}
+.success-pos{font-size:56px;font-weight:800;color:var(--blue);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+.success-lane-label{font-size:12px;color:var(--text3);margin-top:4px;font-weight:500}
+.success-box{margin:16px 0;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.success-ai{margin-top:12px;padding:10px 12px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);font-size:12px;color:#1E40AF;line-height:1.6;text-align:left}
+.qr-area{text-align:center;padding:20px 0}
+.qr-frame{width:140px;height:140px;margin:0 auto 14px;border:2px solid var(--border2);border-radius:var(--radius-lg);display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:8px;background:var(--bg3)}
 
-/* ── TV Display ── */
-.tv-container{background:#060D1F;border-radius:var(--radius-xl);padding:0;overflow:hidden;min-height:520px}
-.tv-header{background:#0A1628;border-bottom:1px solid rgba(255,255,255,.08);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
-.tv-logo{display:flex;align-items:center;gap:10px}
-.tv-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center}
-.tv-logo-icon svg{width:16px;height:16px;fill:white}
-.tv-logo-name{font-size:16px;font-weight:600;color:white}
-.tv-logo-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
-.tv-right{display:flex;align-items:center;gap:12px}
-.tv-clock{font-family:var(--mono);font-size:16px;font-weight:500;color:rgba(255,255,255,.7)}
-.tv-live{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#4ADE80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);padding:4px 10px;border-radius:20px}
-.tv-live-dot{width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:pulse 1.5s infinite}
-.tv-body{padding:1.25rem 1.5rem}
-.tv-lanes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem}
-.tv-lane{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius-lg);overflow:hidden}
-.tv-lane-head{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:7px}
-.tv-lane-dot{width:7px;height:7px;border-radius:50%}
-.tv-lane-title{font-size:12px;font-weight:600;color:rgba(255,255,255,.8)}
-.tv-lane-count{font-size:11px;color:rgba(255,255,255,.35);margin-left:auto}
-.tv-row{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px}
-.tv-row.tv-serving{background:rgba(74,222,128,.07)}
-.tv-row-pos{font-size:16px;font-weight:600;color:rgba(255,255,255,.2);width:22px;flex-shrink:0;font-family:var(--mono)}
-.tv-row-info{flex:1}
-.tv-serving-tag{font-size:9px;font-weight:700;letter-spacing:.8px;color:#4ADE80;margin-bottom:2px}
-.tv-row-name{font-size:14px;font-weight:600;color:white}
-.tv-row-wait{font-size:10px;color:rgba(255,255,255,.35)}
-.tv-section-tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px}
-.tvs-blue{background:rgba(59,130,246,.2);color:#93C5FD}
-.tvs-red{background:rgba(239,68,68,.2);color:#FCA5A5}
-.tvs-yellow{background:rgba(245,158,11,.2);color:#FCD34D}
-.tvs-green{background:rgba(16,185,129,.2);color:#6EE7B7}
-.tvs-purple{background:rgba(139,92,246,.2);color:#C4B5FD}
-.tv-insight{margin-top:1rem;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);border-radius:var(--radius-lg);padding:.875rem 1.25rem;display:flex;align-items:flex-start;gap:10px}
-.tv-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px}
-.tv-insight-text{font-size:12px;color:rgba(255,255,255,.55);line-height:1.6}
-.tv-ticker{background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.05);padding:.625rem 1.5rem;font-size:12px;color:rgba(255,255,255,.3);text-align:center}
+/* ── TV ── */
+.tv-shell{background:#060A12;border-radius:var(--radius-xl);overflow:hidden;min-height:540px;border:1px solid rgba(255,255,255,.06)}
+.tv-bar{background:#08101D;border-bottom:1px solid rgba(255,255,255,.07);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.tv-logo-row{display:flex;align-items:center;gap:10px}
+.tv-logo-box{width:34px;height:34px;background:var(--blue-dim);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.tv-logo-box svg{width:17px;height:17px;fill:white}
+.tv-brand{font-size:16px;font-weight:700;color:white;letter-spacing:-.2px}
+.tv-brand-sub{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase}
+.tv-bar-right{display:flex;align-items:center;gap:14px}
+.tv-clk{font-family:var(--mono);font-size:18px;font-weight:500;color:rgba(255,255,255,.7);letter-spacing:1px}
+.tv-live-tag{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#4ADE80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18);padding:5px 10px;border-radius:20px;letter-spacing:.5px}
+.tv-live-dot{width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:blink 1.5s infinite}
+.tv-body{padding:16px 20px}
+.tv-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.tv-lane{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-lg);overflow:hidden}
+.tv-lane-hdr{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.02)}
+.tv-ldot{width:7px;height:7px;border-radius:50%}
+.tv-ltitle{font-size:12px;font-weight:600;color:rgba(255,255,255,.75);letter-spacing:.2px}
+.tv-lcnt{font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;font-variant-numeric:tabular-nums}
+.tv-drow{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px}
+.tv-drow:last-child{border-bottom:none}
+.tv-drow.tv-srv{background:rgba(74,222,128,.05)}
+.tv-pos{font-size:14px;font-weight:700;color:rgba(255,255,255,.18);width:20px;flex-shrink:0;font-family:var(--mono)}
+.tv-dinfo{flex:1;min-width:0}
+.tv-srv-tag{font-size:8px;font-weight:700;letter-spacing:1px;color:#4ADE80;text-transform:uppercase;margin-bottom:2px}
+.tv-dname{font-size:14px;font-weight:600;color:rgba(255,255,255,.88);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tv-dwait{font-size:9px;color:rgba(255,255,255,.3);margin-top:1px}
+.tv-dsec{font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
+.tvs-blue{background:rgba(121,192,255,.12);color:#79C0FF;border:1px solid rgba(121,192,255,.2)}
+.tvs-red{background:rgba(248,81,73,.12);color:#FF9492;border:1px solid rgba(248,81,73,.2)}
+.tvs-yellow{background:rgba(210,153,34,.12);color:#E3B341;border:1px solid rgba(210,153,34,.2)}
+.tvs-green{background:rgba(63,185,80,.12);color:#56D364;border:1px solid rgba(63,185,80,.2)}
+.tvs-purple{background:rgba(188,140,255,.12);color:#D2A8FF;border:1px solid rgba(188,140,255,.2)}
+.tv-insight{margin-top:2px;background:rgba(56,139,253,.06);border:1px solid rgba(56,139,253,.12);border-radius:var(--radius-lg);padding:11px 16px;display:flex;gap:10px;align-items:flex-start}
+.tv-insight-ico{font-size:13px;flex-shrink:0;margin-top:1px}
+.tv-insight-txt{font-size:11px;color:rgba(255,255,255,.65);line-height:1.6}
+.tv-foot{background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);padding:8px 20px;font-size:11px;color:rgba(255,255,255,.25);text-align:center;letter-spacing:.3px}
 
 /* ── Modal ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
 .overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--radius-xl);border:1px solid var(--border);padding:1.5rem;width:360px;max-width:92vw;box-shadow:var(--shadow-lg)}
-.modal-title{font-size:15px;font-weight:600;margin-bottom:1rem}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem}
-.mbtn{padding:7px 16px;font-size:13px;font-weight:500;font-family:var(--font);border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;transition:all .15s}
-.mbtn:hover{background:var(--surface3)}
-.mbtn.primary{background:var(--blue);color:white;border-color:var(--blue)}
-.mbtn.primary:hover{background:#1540B0}
-.mbtn:disabled{opacity:.5;cursor:not-allowed}
-.ai-hint{margin-top:.75rem;padding:8px 10px;background:var(--blue-bg);border-radius:var(--radius);font-size:11px;color:#1E3A8A;line-height:1.5;display:none}
-
-/* ── Transfer Modal ── */
-.transfer-options{display:flex;flex-direction:column;gap:8px;margin-top:.5rem}
-.transfer-opt{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px}
-.transfer-opt:hover{border-color:var(--blue);background:var(--blue-bg)}
-.transfer-opt.selected{border-color:var(--blue);background:var(--blue-bg)}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:20px;width:360px;max-width:92vw;box-shadow:var(--shadow-lg)}
+.modal-ttl{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.mfield{margin-bottom:12px}
+.mfield label{display:block;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.minput{width:100%;padding:8px 10px;font-size:13px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none}
+.minput:focus{border-color:var(--blue)}
+.mselect{width:100%;padding:7px 10px;font-size:12px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none}
+.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.mbtn{padding:7px 16px;font-size:12px;font-weight:600;font-family:var(--font);border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.mbtn.cancel{background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+.mbtn.cancel:hover{border-color:var(--border2);color:var(--text)}
+.mbtn.confirm{background:var(--blue-dim);border:1px solid var(--blue-dim);color:white}
+.mbtn.confirm:hover{background:var(--blue)}
+.mbtn:disabled{opacity:.4;cursor:not-allowed}
+.ai-hint{margin-top:10px;padding:8px 10px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);font-size:11px;color:#1E40AF;line-height:1.5;display:none}
+.xfer-opts{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.xfer-opt{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px;background:var(--surface2)}
+.xfer-opt:hover{border-color:var(--blue-border);background:var(--blue-bg)}
+.xfer-opt.selected{border-color:var(--blue-border);background:var(--blue-bg)}
 
 /* ── Toast ── */
-.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--text);color:white;border-radius:var(--radius);padding:9px 16px;font-size:13px;z-index:500;display:none;max-width:300px;box-shadow:var(--shadow-lg)}
-.toast.show{display:block}
-.toast.success{background:var(--green)}
-.toast.error{background:var(--red)}
-.toast.info{background:var(--blue)}
-
-/* ── Utils ── */
-.select-field{width:100%;padding:8px 12px;font-size:13px;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none}
-.label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;display:block}
-.empty{padding:20px;text-align:center;font-size:13px;color:var(--text3)}
+.toast{position:fixed;bottom:20px;right:20px;border-radius:var(--radius);padding:9px 14px;font-size:12px;font-weight:500;z-index:999;display:none;max-width:300px;border:1px solid;box-shadow:var(--shadow-lg)}
+.toast.show{display:flex;align-items:center;gap:7px}
+.toast.success{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.toast.error{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.toast.info{background:var(--blue-bg);border-color:var(--blue-border);color:var(--cyan)}
+.toast.warn{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
 </style>
 </head>
 <body>
 
-<!-- App loads directly, no gate -->
-
-<!-- App -->
-<div class="app">
-  <nav class="topbar">
-    <div class="topbar-logo">
-      <div class="topbar-logo-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <div class="topbar-logo-name">Donor Flow</div>
+<div style="display:flex;flex-direction:column;min-height:100vh">
+<!-- Topbar -->
+<nav class="topbar">
+  <a class="logo" href="#">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+    <span class="logo-name">Donor Flow</span>
+    <span class="logo-tag">POC</span>
+  </a>
+  <div class="nav">
+    <div class="ntab active" onclick="switchView('staff',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Staff Dashboard
     </div>
-    <div class="topbar-nav">
-      <div class="tnav active" onclick="switchView('staff',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Staff Dashboard
-      </div>
-      <div class="tnav" onclick="switchView('kiosk',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
-        Donor Kiosk
-      </div>
-      <div class="tnav" onclick="switchView('tv',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        TV Display
-      </div>
+    <div class="ntab" onclick="switchView('kiosk',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      Donor Kiosk
     </div>
-    <div class="topbar-right">
-      <select class="role-select" id="role-select" onchange="onRoleChange()">
-        <option value="MSS">Role: MSS (Supervisor)</option>
-        <option value="BAM">Role: BAM (Admin Manager)</option>
-        <option value="MH">Role: MH (Medical Historian)</option>
-        <option value="PHLEBOTOMIST">Role: Phlebotomist</option>
+    <div class="ntab" onclick="switchView('tv',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      TV Display
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-time" id="top-time"></span>
+    <select class="center-select" id="center-sel">
+      <option>Center: Bannockburn IL</option>
+      <option>Center: Chicago North</option>
+      <option>Center: Deerfield IL</option>
+    </select>
+    <div class="role-pill">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <select id="role-sel" onchange="onRoleChange()" style="background:none;border:none;color:var(--text2);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;outline:none">
+        <option value="MSS">MSS — Supervisor</option>
+        <option value="BAM">BAM — Admin Mgr</option>
+        <option value="MH">MH — Medical Historian</option>
+        <option value="PHLEBOTOMIST">Phlebotomist</option>
       </select>
-      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
     </div>
-  </nav>
+    <div class="live-pill"><div class="pulse"></div>LIVE</div>
+  </div>
+</nav>
 
-  <!-- ── STAFF VIEW ── -->
-  <div class="view active" id="view-staff">
-    <div class="metrics">
-      <div class="metric"><div class="metric-label">Total in queue</div><div class="metric-value" id="m-total">0</div><div class="metric-sub">all lanes</div></div>
-      <div class="metric"><div class="metric-label">FastPass waiting</div><div class="metric-value" id="m-fp">0</div><div class="metric-sub">priority lane</div></div>
-      <div class="metric"><div class="metric-label">Regular waiting</div><div class="metric-value" id="m-reg">0</div><div class="metric-sub">standard lane</div></div>
-      <div class="metric"><div class="metric-label">Avg wait time</div><div class="metric-value" id="m-wait">—</div><div class="metric-sub">minutes</div></div>
-      <div class="metric"><div class="metric-label">Beds available</div><div class="metric-value" id="m-beds">5</div><div class="metric-sub">of 8 sections</div></div>
+<!-- STAFF VIEW -->
+<div class="view active" id="view-staff">
+  <div class="statbar">
+    <div class="stat s-blue">
+      <div class="stat-label">Total in queue</div>
+      <div class="stat-val" id="m-total">0</div>
+      <div class="stat-sub">all lanes</div>
     </div>
-
-    <div class="section-tabs" id="section-tabs">
-      <div class="stab active" onclick="switchSection('all',this)">All Sections <span class="stab-count" id="sc-all">0</span></div>
-      <div class="stab" onclick="switchSection('screening',this)">Screening <span class="stab-count" id="sc-screening">0</span></div>
-      <div class="stab" onclick="switchSection('blue',this)">Blue Section <span class="stab-count" id="sc-blue">0</span></div>
-      <div class="stab" onclick="switchSection('red',this)">Red Section <span class="stab-count" id="sc-red">0</span></div>
-      <div class="stab" onclick="switchSection('yellow',this)">Yellow Section <span class="stab-count" id="sc-yellow">0</span></div>
-      <div class="stab" onclick="switchSection('green',this)">Green Section <span class="stab-count" id="sc-green">0</span></div>
+    <div class="stat s-purple">
+      <div class="stat-label">FastPass waiting</div>
+      <div class="stat-val" id="m-fp">0</div>
+      <div class="stat-sub">priority lane</div>
     </div>
-
-    <div class="queue-grid" id="queue-grid">
-      <div class="queue-card fp-card">
-        <div class="queue-head">
-          <div class="queue-head-left"><div class="queue-lane-dot" style="background:var(--blue)"></div><div class="queue-title">FastPass Lane</div></div>
-          <div class="queue-count" id="fp-count">0 donors</div>
-        </div>
-        <div class="queue-body" id="fp-queue"><div class="empty">No donors in FastPass lane</div></div>
-        <div class="add-row">
-          <button class="add-btn" onclick="openAdd('fp')" id="add-fp-btn">+ Add donor</button>
-          <button class="add-btn" onclick="callNextInLane('fp')" id="call-next-fp" style="flex:0.6;font-size:11px">Call next →</button>
-        </div>
-      </div>
-      <div class="queue-card reg-card">
-        <div class="queue-head">
-          <div class="queue-head-left"><div class="queue-lane-dot" style="background:var(--green)"></div><div class="queue-title">Regular Lane</div></div>
-          <div class="queue-count" id="reg-count">0 donors</div>
-        </div>
-        <div class="queue-body" id="reg-queue"><div class="empty">No donors in Regular lane</div></div>
-        <div class="add-row">
-          <button class="add-btn" onclick="openAdd('reg')" id="add-reg-btn">+ Add donor</button>
-          <button class="add-btn" onclick="callNextInLane('reg')" id="call-next-reg" style="flex:0.6;font-size:11px">Call next →</button>
-        </div>
-      </div>
+    <div class="stat s-green">
+      <div class="stat-label">Regular waiting</div>
+      <div class="stat-val" id="m-reg">0</div>
+      <div class="stat-sub">standard lane</div>
     </div>
-
-    <!-- DIS/DEP Simulator -->
-    <div class="sim-panel">
-      <div class="sim-head">
-        <div class="ai-icon" style="background:var(--amber-bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-        <div class="sim-title">DIS / DEP Integration Simulator</div>
-        <div class="sim-sub">Fire mock integration events to simulate real-time data flow</div>
-      </div>
-      <div class="sim-btns">
-        <button class="sim-btn fire" onclick="simEvent('edq')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          EDQ Check-in Complete
-        </button>
-        <button class="sim-btn fire" onclick="simEvent('fastpass')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          FastPass Activated (DEP)
-        </button>
-        <button class="sim-btn fire" onclick="simEvent('bed')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-          Bed Available (DIS)
-        </button>
-        <button class="sim-btn fire" onclick="simEvent('new')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-          New Donor Check-in (DIS)
-        </button>
-        <button class="sim-btn" onclick="simEvent('disconnect')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-          Donor Disconnected (DIS)
-        </button>
-      </div>
+    <div class="stat s-amber">
+      <div class="stat-label">Avg wait time</div>
+      <div class="stat-val" id="m-wait">—</div>
+      <div class="stat-sub">minutes</div>
     </div>
-
-    <!-- AI Panel -->
-    <div class="ai-panel">
-      <div class="ai-head">
-        <div class="ai-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-        <div class="ai-title">AI Queue Assistant</div>
-        <div class="ai-status"><div class="ai-status-dot" id="ai-dot"></div><span id="ai-status-text">Ready</span></div>
-      </div>
-      <div class="ai-row">
-        <input class="ai-input" id="ai-input" placeholder="Who should I call next? Any bottlenecks? How's the FastPass load?" onkeydown="if(event.key==='Enter')askAI()"/>
-        <button class="ai-send" id="ai-send" onclick="askAI()">Ask</button>
-      </div>
-      <div class="ai-msgs" id="ai-msgs"></div>
+    <div class="stat s-red">
+      <div class="stat-label">Beds available</div>
+      <div class="stat-val" id="m-beds">0</div>
+      <div class="stat-sub">of 8 sections</div>
     </div>
   </div>
 
-  <!-- ── KIOSK VIEW ── -->
-  <div class="view" id="view-kiosk">
-    <div class="kiosk-wrap">
-      <div class="kiosk-card">
-        <div class="kiosk-header">
-          <h2>BioLife Donor Check-In</h2>
-          <p>Welcome! Please register to join the queue</p>
-        </div>
-        <div class="kiosk-body">
-          <div class="tab-toggle">
-            <button class="ktab active" onclick="switchKioskTab('name',this)">Enter name</button>
-            <button class="ktab" onclick="switchKioskTab('qr',this)">FastPass QR</button>
-          </div>
+  <div class="section-bar">
+    <span class="section-bar-label">Filter</span>
+    <div class="stab active" onclick="switchSection('all',this)">All <span class="stab-n" id="sc-all">0</span></div>
+    <div class="stab" onclick="switchSection('screening',this)">Screening <span class="stab-n" id="sc-screening">0</span></div>
+    <div class="stab" onclick="switchSection('blue',this)">Blue <span class="stab-n" id="sc-blue">0</span></div>
+    <div class="stab" onclick="switchSection('red',this)">Red <span class="stab-n" id="sc-red">0</span></div>
+    <div class="stab" onclick="switchSection('yellow',this)">Yellow <span class="stab-n" id="sc-yellow">0</span></div>
+    <div class="stab" onclick="switchSection('green',this)">Green <span class="stab-n" id="sc-green">0</span></div>
+  </div>
 
-          <div id="ktab-name">
-            <div class="field-row">
-              <div class="field"><label>First name</label><input id="k-first" type="text" placeholder="Sarah"/></div>
-              <div class="field"><label>Last initial</label><input id="k-last" type="text" placeholder="M" maxlength="1"/></div>
-            </div>
-            <div class="field"><label>Phone number (for SMS updates)</label><input id="k-phone" type="tel" placeholder="(555) 000-0000"/></div>
-            <div class="field">
-              <label>Donor type</label>
-              <select id="k-type">
-                <option value="Donation">Regular donor</option>
-                <option value="New Donor">New donor — first visit</option>
-                <option value="SPE">SPE donor</option>
-              </select>
-            </div>
-            <div class="opt-row"><input type="checkbox" id="k-sms"/><label for="k-sms">Opt in to SMS queue updates (no need to share phone verbally)</label></div>
-            <button class="kbtn primary" id="kiosk-join-btn" onclick="kioskJoin()">Join queue</button>
-            <div class="ai-welcome" id="k-ai-msg"></div>
-          </div>
-
-          <div id="ktab-qr" style="display:none">
-            <div class="qr-area">
-              <div class="qr-frame" id="qr-frame"></div>
-              <p style="font-size:13px;color:var(--text2);margin-bottom:1.5rem">Open BioLife app → tap FastPass → scan this code</p>
-              <button class="kbtn primary" id="fp-scan-btn" onclick="simulateFPScan()">Simulate FastPass scan</button>
-              <div class="ai-welcome" id="k-fp-ai-msg" style="margin-top:1rem"></div>
-            </div>
-          </div>
-
-          <div id="ktab-success" style="display:none">
-            <div class="success-body">
-              <div class="success-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-              <div style="font-size:15px;font-weight:600;margin-bottom:.5rem">You're in the queue!</div>
-              <div class="success-pos-wrap">
-                <div class="success-pos" id="s-pos">—</div>
-                <div class="success-lane" id="s-lane">—</div>
-              </div>
-              <div class="success-msg" id="s-msg"></div>
-              <div class="success-ai" id="s-ai"></div>
-              <button class="kbtn primary" style="margin-top:1.25rem" onclick="resetKiosk()">Done — next donor</button>
-            </div>
-          </div>
-        </div>
+  <div class="queue-wrap">
+    <div class="qcard">
+      <div class="qcard-head">
+        <div class="qcard-head-l"><span class="lane-badge lb-fp">FastPass</span><span class="qcard-title">Priority Lane</span></div>
+        <span class="qcard-count" id="fp-count">0 donors</span>
+      </div>
+      <div class="qcard-body" id="fp-queue"><div class="empty-state"><p>No donors in FastPass lane</p></div></div>
+      <div class="qcard-foot">
+        <button class="fadd" onclick="openAdd('fp')" id="add-fp-btn">+ Add donor</button>
+        <button class="fcall" onclick="callNextInLane('fp')">Call next ›</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qcard-head">
+        <div class="qcard-head-l"><span class="lane-badge lb-reg">Regular</span><span class="qcard-title">Standard Lane</span></div>
+        <span class="qcard-count" id="reg-count">0 donors</span>
+      </div>
+      <div class="qcard-body" id="reg-queue"><div class="empty-state"><p>No donors in Regular lane</p></div></div>
+      <div class="qcard-foot">
+        <button class="fadd" onclick="openAdd('reg')" id="add-reg-btn">+ Add donor</button>
+        <button class="fcall" onclick="callNextInLane('reg')">Call next ›</button>
       </div>
     </div>
   </div>
 
-  <!-- ── TV VIEW ── -->
-  <div class="view" id="view-tv">
-    <div class="tv-container">
-      <div class="tv-header">
-        <div class="tv-logo">
-          <div class="tv-logo-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <div><div class="tv-logo-name">Donor Flow</div><div class="tv-logo-sub">Live Queue Status</div></div>
-        </div>
-        <div class="tv-right">
-          <div class="tv-clock" id="tv-clock">--:-- --</div>
-          <div class="tv-live"><div class="tv-live-dot"></div>LIVE</div>
-        </div>
-      </div>
-      <div class="tv-body">
-        <div class="tv-lanes">
-          <div class="tv-lane">
-            <div class="tv-lane-head"><div class="tv-lane-dot" style="background:#3B82F6"></div><div class="tv-lane-title">FastPass Lane</div><div class="tv-lane-count" id="tv-fp-count">0 waiting</div></div>
-            <div id="tv-fp-body"><div style="padding:16px;text-align:center;font-size:12px;color:rgba(255,255,255,.25)">No donors</div></div>
-          </div>
-          <div class="tv-lane">
-            <div class="tv-lane-head"><div class="tv-lane-dot" style="background:#10B981"></div><div class="tv-lane-title">Regular Lane</div><div class="tv-lane-count" id="tv-reg-count">0 waiting</div></div>
-            <div id="tv-reg-body"><div style="padding:16px;text-align:center;font-size:12px;color:rgba(255,255,255,.25)">No donors</div></div>
-          </div>
-          <div class="tv-lane">
-            <div class="tv-lane-head"><div class="tv-lane-dot" style="background:#F59E0B"></div><div class="tv-lane-title">PE / Screening</div><div class="tv-lane-count" id="tv-pe-count">0 waiting</div></div>
-            <div id="tv-pe-body"><div style="padding:16px;text-align:center;font-size:12px;color:rgba(255,255,255,.25)">No donors</div></div>
-          </div>
-        </div>
-        <div class="tv-insight" id="tv-insight" style="display:none">
-          <div class="tv-insight-icon">⚡</div>
-          <div class="tv-insight-text" id="tv-insight-text"></div>
-        </div>
-      </div>
-      <div class="tv-ticker" id="tv-ticker">System online — donors will appear as they check in</div>
+  <div class="sim-panel">
+    <div class="panel-head">
+      <div class="panel-icon pi-amber"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <span class="panel-title">DIS / DEP Integration Simulator</span>
+      <span class="panel-sub">Fire mock real-time events from DIS &amp; DEP systems</span>
+    </div>
+    <div class="sim-btns">
+      <button class="sbtn fire" onclick="simEvent('edq')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>EDQ Check-in</button>
+      <button class="sbtn fire" onclick="simEvent('fastpass')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>FastPass via DEP</button>
+      <button class="sbtn fire" onclick="simEvent('new')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>New Donor via DIS</button>
+      <button class="sbtn fire" onclick="simEvent('bed')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Bed Available (DIS)</button>
+      <button class="sbtn" onclick="simEvent('disconnect')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Donor Disconnected</button>
     </div>
   </div>
+
+  <div class="ai-panel">
+    <div class="panel-head" style="margin-bottom:10px">
+      <div class="panel-icon pi-blue"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      <span class="panel-title">AI Queue Assistant</span>
+      <div class="ai-status" style="margin-left:auto"><div class="asdot" id="ai-dot"></div><span id="ai-st">Ready</span></div>
+    </div>
+    <div class="ai-row">
+      <input class="ai-inp" id="ai-inp" placeholder="Who should I call next? Any bottlenecks? FastPass load?" onkeydown="if(event.key==='Enter')askAI()"/>
+      <button class="ai-go" id="ai-go" onclick="askAI()">Ask AI</button>
+    </div>
+    <div class="ai-feed" id="ai-feed"></div>
+  </div>
+</div>
+
+<!-- KIOSK VIEW -->
+<div class="view" id="view-kiosk">
+  <div class="kiosk-outer">
+    <div class="kiosk-card">
+      <div class="kiosk-hdr">
+        <div class="kiosk-hdr-logo">
+          <div class="kiosk-hdr-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div><div class="kiosk-hdr-brand">BioLife</div><div class="kiosk-hdr-sub">Plasma Center</div></div>
+        </div>
+        <h2>Donor Check-In</h2>
+        <p>Welcome! Please register to join the donation queue</p>
+      </div>
+      <div class="kiosk-body">
+        <div class="ktabs">
+          <button class="ktab active" onclick="switchKTab('name',this)">Enter name</button>
+          <button class="ktab" onclick="switchKTab('qr',this)">FastPass QR scan</button>
+        </div>
+        <div id="ktab-name">
+          <div class="frow">
+            <div class="field"><label>First name</label><input id="k-first" type="text" placeholder="Sarah"/></div>
+            <div class="field"><label>Last initial</label><input id="k-last" type="text" placeholder="M" maxlength="1"/></div>
+          </div>
+          <div class="field"><label>Phone number (SMS updates)</label><input id="k-phone" type="tel" placeholder="(555) 000-0000"/></div>
+          <div class="field">
+            <label>Donor type</label>
+            <select id="k-type">
+              <option value="Donation">Regular donor</option>
+              <option value="New Donor">New donor — first visit</option>
+              <option value="SPE">SPE donor</option>
+            </select>
+          </div>
+          <div class="opt-row"><input type="checkbox" id="k-sms"/><label for="k-sms">Opt in to SMS queue updates (no need to share phone verbally)</label></div>
+          <button class="kbtn primary" id="kbtn-join" onclick="kioskJoin()">Join queue</button>
+          <div class="ai-welcome" id="k-ai-msg"></div>
+        </div>
+        <div id="ktab-qr" style="display:none">
+          <div class="qr-area">
+            <div class="qr-frame" id="qr-frame"></div>
+            <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Open BioLife app → tap FastPass → scan this code</p>
+            <button class="kbtn primary" id="kbtn-fp" onclick="simFPScan()">Simulate FastPass scan</button>
+            <div class="ai-welcome" id="k-fp-msg" style="margin-top:12px"></div>
+          </div>
+        </div>
+        <div id="ktab-success" style="display:none">
+          <div class="success-wrap">
+            <div class="success-ring"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">You're in the queue!</div>
+            <div class="success-box">
+              <div class="success-pos" id="s-pos">—</div>
+              <div class="success-lane-label" id="s-lane">—</div>
+            </div>
+            <div style="font-size:12px;color:var(--text3)" id="s-msg"></div>
+            <div class="success-ai" id="s-ai"></div>
+            <button class="kbtn primary" style="margin-top:16px" onclick="resetKiosk()">Done — next donor</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TV VIEW -->
+<div class="view" id="view-tv">
+  <div class="tv-shell">
+    <div class="tv-bar">
+      <div class="tv-logo-row">
+        <div class="tv-logo-box"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div><div class="tv-brand">Donor Flow</div><div class="tv-brand-sub">Live Queue Status · Bannockburn IL</div></div>
+      </div>
+      <div class="tv-bar-right">
+        <div class="tv-clk" id="tv-clk">--:-- --</div>
+        <div class="tv-live-tag"><div class="tv-live-dot"></div>LIVE</div>
+      </div>
+    </div>
+    <div class="tv-body">
+      <div class="tv-grid">
+        <div class="tv-lane">
+          <div class="tv-lane-hdr"><div class="tv-ldot" style="background:#388BFD"></div><div class="tv-ltitle">FastPass Lane</div><div class="tv-lcnt" id="tv-fp-cnt">0 waiting</div></div>
+          <div id="tv-fp-body"><div style="padding:20px;text-align:center;font-size:11px;color:rgba(255,255,255,.2)">No donors</div></div>
+        </div>
+        <div class="tv-lane">
+          <div class="tv-lane-hdr"><div class="tv-ldot" style="background:#3FB950"></div><div class="tv-ltitle">Regular Lane</div><div class="tv-lcnt" id="tv-reg-cnt">0 waiting</div></div>
+          <div id="tv-reg-body"><div style="padding:20px;text-align:center;font-size:11px;color:rgba(255,255,255,.2)">No donors</div></div>
+        </div>
+        <div class="tv-lane">
+          <div class="tv-lane-hdr"><div class="tv-ldot" style="background:#D29922"></div><div class="tv-ltitle">PE / Screening</div><div class="tv-lcnt" id="tv-pe-cnt">0 waiting</div></div>
+          <div id="tv-pe-body"><div style="padding:20px;text-align:center;font-size:11px;color:rgba(255,255,255,.2)">No donors</div></div>
+        </div>
+      </div>
+      <div class="tv-insight" id="tv-insight" style="display:none">
+        <div class="tv-insight-ico">⚡</div>
+        <div class="tv-insight-txt" id="tv-insight-txt"></div>
+      </div>
+    </div>
+    <div class="tv-foot" id="tv-foot">System online — Donor Flow Queue Management · BioLife Bannockburn</div>
+  </div>
+</div>
 </div>
 
 <!-- Add Modal -->
 <div class="overlay" id="add-modal" onclick="if(event.target===this)closeAdd()">
   <div class="modal">
-    <div class="modal-title" id="add-modal-title">Add donor to queue</div>
-    <div class="field"><label class="label">Donor name</label><input class="select-field" id="add-name" placeholder="First name + last initial" style="padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;width:100%"/></div>
-    <div class="field" style="margin-top:.75rem"><label class="label">Phone number</label><input class="select-field" id="add-phone" placeholder="(555) 000-0000" style="padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;width:100%;font-family:var(--mono)"/></div>
-    <div class="field" style="margin-top:.75rem"><label class="label">Donor type</label>
-      <select class="select-field" id="add-type">
+    <div class="modal-ttl">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      <span id="add-modal-ttl">Add donor</span>
+    </div>
+    <div class="mfield"><label>Donor name</label><input class="minput" id="add-name" placeholder="First name + last initial"/></div>
+    <div class="mfield"><label>Phone number</label><input class="minput" id="add-phone" placeholder="(555) 000-0000" style="font-family:var(--mono)"/></div>
+    <div class="mfield"><label>Donor type</label>
+      <select class="mselect" id="add-type">
         <option value="Donation">Regular donation</option>
         <option value="New Donor">New donor</option>
         <option value="SPE">SPE</option>
@@ -505,22 +548,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </select>
     </div>
     <div class="ai-hint" id="add-hint"></div>
-    <div class="modal-actions">
-      <button class="mbtn" onclick="closeAdd()">Cancel</button>
-      <button class="mbtn primary" id="add-confirm-btn" onclick="confirmAdd()">Add to queue</button>
+    <div class="mbtns">
+      <button class="mbtn cancel" onclick="closeAdd()">Cancel</button>
+      <button class="mbtn confirm" id="add-confirm" onclick="confirmAdd()">Add to queue</button>
     </div>
   </div>
 </div>
 
 <!-- Transfer Modal -->
-<div class="overlay" id="transfer-modal" onclick="if(event.target===this)closeTransfer()">
+<div class="overlay" id="xfer-modal" onclick="if(event.target===this)closeXfer()">
   <div class="modal">
-    <div class="modal-title">Transfer donor to another lane</div>
-    <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Select destination lane for <strong id="transfer-donor-name"></strong></div>
-    <div class="transfer-options" id="transfer-opts"></div>
-    <div class="modal-actions">
-      <button class="mbtn" onclick="closeTransfer()">Cancel</button>
-      <button class="mbtn primary" onclick="confirmTransfer()">Transfer</button>
+    <div class="modal-ttl">Transfer donor</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Moving <strong id="xfer-name" style="color:var(--text)"></strong> to:</div>
+    <div class="xfer-opts" id="xfer-opts"></div>
+    <div class="mbtns">
+      <button class="mbtn cancel" onclick="closeXfer()">Cancel</button>
+      <button class="mbtn confirm" onclick="confirmXfer()">Transfer</button>
     </div>
   </div>
 </div>
@@ -528,250 +571,217 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <div class="toast" id="toast"></div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────
-const SECTIONS = ['Blue Section','Red Section','Yellow Section','Green Section','Purple Section'];
-const SECTION_CHIPS = {
-  'Blue Section':'chip-blue tvs-blue',
-  'Red Section':'chip-red tvs-red',
-  'Yellow Section':'chip-yellow tvs-yellow',
-  'Green Section':'chip-green tvs-green',
-  'Purple Section':'chip-purple tvs-purple'
-};
-const SECTION_FILTER_MAP = {blue:'Blue Section',red:'Red Section',yellow:'Yellow Section',green:'Green Section'};
-const DONOR_NAMES = ['Sarah M.','James T.','Priya K.','Carlos M.','Aisha W.','Ben S.','Maria C.','Tom R.','Lisa H.','David K.','Emma P.','Ryan O.','Nadia F.','Chris L.'];
-
-let fpQueue=[], regQueue=[], peQueue=[];
-let nextId=1, addingTo='fp', transferDonorId=null, transferFromLane=null;
-let bedsAvailable=5, aiHistory=[], currentSection='all', currentRole='MSS';
-
 // ── Config ─────────────────────────────────────────────────────
-// Replace this with your Cloudflare Worker URL after deploying
 const PROXY_URL = 'https://empty-lake-7e5a.sandeepak1511.workers.dev';
 
+// ── Constants ──────────────────────────────────────────────────
+const SECTIONS = ['Blue Section','Red Section','Yellow Section','Green Section','Purple Section'];
+const SEC_CHIP = {'Blue Section':'sc-blue tvs-blue','Red Section':'sc-red tvs-red','Yellow Section':'sc-yellow tvs-yellow','Green Section':'sc-green tvs-green','Purple Section':'sc-purple tvs-purple'};
+const SEC_MAP = {blue:'Blue Section',red:'Red Section',yellow:'Yellow Section',green:'Green Section'};
 
+// ── State ──────────────────────────────────────────────────────
+let fpQ=[], regQ=[], peQ=[];
+let nid=1, addTo='fp', xferDonorId=null, xferFromLane=null;
+let beds=5, aiHist=[], curSection='all', curRole='MSS';
 
+// ── Demo Data ──────────────────────────────────────────────────
+function loadDemoData(){
+  const t=Date.now();
+  fpQ=[
+    {id:nid++,name:'Andrew B.',type:'Fast Pass',phone:'(773) 951-1136',section:'Blue Section',serving:true,joinedAt:t-18*60000},
+    {id:nid++,name:'Jessica P.',type:'Fast Pass',phone:'(555) 546-1295',section:null,serving:false,joinedAt:t-12*60000},
+    {id:nid++,name:'Marcus D.',type:'Fast Pass',phone:'(312) 874-2201',section:null,serving:false,joinedAt:t-6*60000},
+  ];
+  regQ=[
+    {id:nid++,name:'Mark S.',type:'Donation',phone:'(841) 455-6511',section:'Red Section',serving:true,joinedAt:t-22*60000},
+    {id:nid++,name:'Andrew O.',type:'Donation',phone:'(884) 552-2324',section:null,serving:false,joinedAt:t-16*60000},
+    {id:nid++,name:'Steven K.',type:'New Donor',phone:'(773) 465-4132',section:null,serving:false,joinedAt:t-13*60000},
+    {id:nid++,name:'Meg H.',type:'Donation',phone:'(310) 874-6551',section:null,serving:false,joinedAt:t-11*60000},
+    {id:nid++,name:'Angela Y.',type:'SPE',phone:'(321) 177-2221',section:null,serving:false,joinedAt:t-8*60000},
+  ];
+  peQ=[
+    {id:nid++,name:'Tom R.',type:'Donation',phone:'(847) 234-5678',section:null,serving:false,joinedAt:t-5*60000},
+    {id:nid++,name:'Priya K.',type:'New Donor',phone:'(630) 987-3344',section:null,serving:false,joinedAt:t-3*60000},
+  ];
+  beds=3;
+}
 
-// ── Claude API ─────────────────────────────────────────────────
-async function claude(messages, system){
-  const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-5-20250929',max_tokens:1000,system,messages})});
+// ── API ────────────────────────────────────────────────────────
+async function claude(messages,system){
+  const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system,messages})});
   const d=await r.json();
   return d.content?.[0]?.text||'Unable to respond.';
 }
 
-function queueCtx(){
-  return {role:currentRole,fastPassQueue:fpQueue.map(d=>({name:d.name,type:d.type,phone:d.phone,serving:d.serving,section:d.section,waitMin:getWaitMin(d,fpQueue.filter(x=>!x.serving).indexOf(d))})),regularQueue:regQueue.map(d=>({name:d.name,type:d.type,phone:d.phone,serving:d.serving,section:d.section,waitMin:getWaitMin(d,regQueue.filter(x=>!x.serving).indexOf(d))})),peQueue:peQueue.map(d=>({name:d.name,type:d.type,serving:d.serving})),bedsAvailable,time:new Date().toLocaleTimeString()};
+function qCtx(){
+  return {role:curRole,fastPassQueue:fpQ.map(d=>({name:d.name,type:d.type,phone:d.phone,serving:d.serving,section:d.section,waitMin:waitMin(d,fpQ.filter(x=>!x.serving).indexOf(d))})),regularQueue:regQ.map(d=>({name:d.name,type:d.type,phone:d.phone,serving:d.serving,section:d.section,waitMin:waitMin(d,regQ.filter(x=>!x.serving).indexOf(d))})),peQueue:peQ.map(d=>({name:d.name,type:d.type,serving:d.serving})),bedsAvailable:beds,time:new Date().toLocaleTimeString()};
 }
 
-// ── AI Panel ───────────────────────────────────────────────────
+// ── AI ─────────────────────────────────────────────────────────
 async function askAI(){
-  const inp=document.getElementById('ai-input');
-  const q=inp.value.trim(); if(!q)return;
+  const inp=document.getElementById('ai-inp');
+  const q=inp.value.trim();if(!q)return;
   inp.value='';
-  setAIStatus(true);
-  addAIMsg(q,'user');
-  const thinking=addThinking();
-  aiHistory.push({role:'user',content:q});
-  const sys=`You are an expert AI assistant for BioLife Donor Flow queue management system.\n\nCurrent state:\n${JSON.stringify(queueCtx(),null,2)}\n\nBusiness rules:\n- Priority order: FastPass > New Donor > SPE > Regular\n- Zipper merge: alternate FP and Regular when calling to sections\n- Only MSS and BAM can move/transfer donors. MH cannot.\n- Phlebotomist can only use Call and Done for their section.\n- ${bedsAvailable} of 8 beds/sections currently available\n\nBe concise (2-3 sentences), specific with donor names, and actionable. If the queue is empty, tell staff to use the Kiosk tab or DIS/DEP simulator.`;
-  try{
-    const reply=await claude(aiHistory,sys);
-    aiHistory.push({role:'assistant',content:reply});
-    thinking.remove(); addAIMsg(reply,'assistant');
-  }catch(e){thinking.remove();addAIMsg('Connection error. Check API key.','assistant');}
-  setAIStatus(false);
+  setAISt(true);addMsg(q,'user');
+  const th=addThink();
+  aiHist.push({role:'user',content:q});
+  const sys=`You are an expert AI assistant for BioLife Donor Flow queue management.\n\nState:\n${JSON.stringify(qCtx(),null,2)}\n\nRules: FastPass>New>SPE>Regular priority. Zipper merge FP+Regular. Only MSS/BAM can move/transfer. MH cannot add/move. ${beds}/8 beds free.\n\nBe concise (2-3 sentences), name specific donors, be actionable.`;
+  try{const r=await claude(aiHist,sys);aiHist.push({role:'assistant',content:r});th.remove();addMsg(r,'assistant');}
+  catch(e){th.remove();addMsg('Connection error.','assistant');}
+  setAISt(false);
 }
-
-function setAIStatus(thinking){
-  document.getElementById('ai-dot').classList.toggle('thinking',thinking);
-  document.getElementById('ai-status-text').textContent=thinking?'Thinking...':'Ready';
-  document.getElementById('ai-send').disabled=thinking;
+function setAISt(on){
+  document.getElementById('ai-dot').classList.toggle('busy',on);
+  document.getElementById('ai-st').textContent=on?'Thinking...':'Ready';
+  document.getElementById('ai-go').disabled=on;
 }
-
-function addAIMsg(text,role){
-  const c=document.getElementById('ai-msgs');
-  const d=document.createElement('div');
-  d.className='ai-msg '+role; d.textContent=text;
-  c.appendChild(d); c.scrollTop=c.scrollHeight; return d;
+function addMsg(t,role){
+  const c=document.getElementById('ai-feed');
+  const d=document.createElement('div');d.className='amsg '+role;d.textContent=t;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;return d;
 }
-function addEventMsg(text){
-  const c=document.getElementById('ai-msgs');
-  const d=document.createElement('div');
-  d.className='ai-msg event'; d.textContent='⚡ '+text;
-  c.appendChild(d); c.scrollTop=c.scrollHeight;
+function addEvt(t){
+  const c=document.getElementById('ai-feed');
+  const d=document.createElement('div');d.className='amsg event';d.textContent='⚡ '+t;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
 }
-function addThinking(){
-  const c=document.getElementById('ai-msgs');
-  const d=document.createElement('div');
-  d.className='ai-thinking';
+function addThink(){
+  const c=document.getElementById('ai-feed');
+  const d=document.createElement('div');d.className='athink';
   d.innerHTML='Thinking <span class="dots"><span>.</span><span>.</span><span>.</span></span>';
-  c.appendChild(d); c.scrollTop=c.scrollHeight; return d;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;return d;
 }
 
-// ── DIS/DEP Simulator ──────────────────────────────────────────
-const simNames=['Jordan B.','Keisha R.','Omar T.','Lily C.','Marcus D.'];
-let simIdx=0;
+// ── Simulator ──────────────────────────────────────────────────
+const simNames=['Jordan B.','Keisha R.','Omar T.','Lily C.','Raj M.','Sofia L.'];let simI=0;
 async function simEvent(type){
-  const name=simNames[simIdx%simNames.length]; simIdx++;
-  const phone='('+Math.floor(300+Math.random()*600)+') '+Math.floor(200+Math.random()*700)+'-'+Math.floor(1000+Math.random()*8999);
+  const name=simNames[simI%simNames.length];simI++;
+  const phone='('+(Math.floor(300+Math.random()*600))+') '+(Math.floor(200+Math.random()*700))+'-'+(Math.floor(1000+Math.random()*8999));
   if(type==='edq'){
-    const donor={id:nextId++,name,type:'Donation',phone,section:null,serving:false,joinedAt:Date.now()};
-    regQueue.push(donor); renderAll();
-    addEventMsg(`DIS/EDQ: ${name} completed screening → auto-added to Regular queue`);
-    showToast(name+' auto-added via EDQ','info');
-  } else if(type==='fastpass'){
-    const donor={id:nextId++,name,type:'Fast Pass',phone,section:null,serving:false,joinedAt:Date.now()};
-    fpQueue.push(donor); renderAll();
-    addEventMsg(`DEP: FastPass activated for ${name} → added to FastPass lane`);
-    showToast(name+' FastPass activated via DEP','info');
-  } else if(type==='bed'){
-    bedsAvailable=Math.min(8,bedsAvailable+1);
-    renderAll(); addEventMsg(`DIS: Bed/section freed → ${bedsAvailable}/8 now available`);
-    showToast('Bed available signal from DIS','info');
-  } else if(type==='new'){
-    const donor={id:nextId++,name,type:'New Donor',phone,section:null,serving:false,joinedAt:Date.now()};
-    regQueue.push(donor); renderAll();
-    addEventMsg(`DIS: New donor ${name} checked in → added to Regular queue`);
-    showToast(name+' — new donor added via DIS','info');
-  } else if(type==='disconnect'){
-    const serving=[...fpQueue,...regQueue].find(d=>d.serving);
-    if(serving){
-      if(fpQueue.find(d=>d.id===serving.id))fpQueue=fpQueue.filter(d=>d.id!==serving.id);
-      else regQueue=regQueue.filter(d=>d.id!==serving.id);
-      bedsAvailable=Math.min(8,bedsAvailable+1);
-      renderAll(); addEventMsg(`DIS: ${serving.name} disconnected → bed freed, removed from display`);
-      showToast(serving.name+' disconnected — bed freed','info');
-    } else { showToast('No donor currently being served','error'); }
+    regQ.push({id:nid++,name,type:'Donation',phone,section:null,serving:false,joinedAt:Date.now()});
+    renderAll();addEvt(`DIS/EDQ: ${name} completed screening → auto-added to Regular queue`);showToast(name+' added via EDQ','info');
+  }else if(type==='fastpass'){
+    fpQ.push({id:nid++,name,type:'Fast Pass',phone,section:null,serving:false,joinedAt:Date.now()});
+    renderAll();addEvt(`DEP: FastPass activated for ${name} → FastPass lane`);showToast(name+' FastPass via DEP','info');
+  }else if(type==='new'){
+    regQ.push({id:nid++,name,type:'New Donor',phone,section:null,serving:false,joinedAt:Date.now()});
+    renderAll();addEvt(`DIS: New donor ${name} checked in → Regular queue`);showToast(name+' — new donor via DIS','info');
+  }else if(type==='bed'){
+    beds=Math.min(8,beds+1);renderAll();addEvt(`DIS: Section freed → ${beds}/8 available`);showToast('Bed available signal from DIS','info');
+  }else if(type==='disconnect'){
+    const s=[...fpQ,...regQ].find(d=>d.serving);
+    if(s){
+      if(fpQ.find(d=>d.id===s.id))fpQ=fpQ.filter(d=>d.id!==s.id);else regQ=regQ.filter(d=>d.id!==s.id);
+      beds=Math.min(8,beds+1);renderAll();addEvt(`DIS: ${s.name} disconnected → bed freed`);showToast(s.name+' disconnected','info');
+    }else showToast('No donor currently serving','error');
   }
   refreshTVInsight();
 }
 
 // ── Queue Actions ──────────────────────────────────────────────
-function canManage(){return currentRole==='MSS'||currentRole==='BAM';}
-function canCall(){return currentRole!=='MH';}
+const canMgr=()=>curRole==='MSS'||curRole==='BAM';
+const canCall=()=>curRole!=='MH';
 
 function callDonor(lane,id){
   if(!canCall()){showToast('Your role cannot call donors','error');return;}
-  const q=lane==='fp'?fpQueue:lane==='reg'?regQueue:peQueue;
-  const d=q.find(x=>x.id===id); if(!d)return;
-  if(q.find(x=>x.serving)){showToast('Finish serving current donor first','error');return;}
-  if(bedsAvailable<=0){showToast('No beds available','error');return;}
-  d.serving=true; d.section=SECTIONS[Math.floor(Math.random()*4)];
-  bedsAvailable=Math.max(0,bedsAvailable-1);
-  renderAll(); showToast(d.name+' called to '+d.section,'success');
-  refreshTVInsight();
+  const q=lane==='fp'?fpQ:lane==='reg'?regQ:peQ;
+  const d=q.find(x=>x.id===id);if(!d)return;
+  if(q.find(x=>x.serving)){showToast('Finish current donor first','error');return;}
+  if(beds<=0){showToast('No beds available','error');return;}
+  d.serving=true;d.section=SECTIONS[Math.floor(Math.random()*4)];
+  beds=Math.max(0,beds-1);renderAll();showToast(d.name+' → '+d.section,'success');refreshTVInsight();
 }
-
 function callNextInLane(lane){
   if(!canCall()){showToast('Your role cannot call donors','error');return;}
-  const q=lane==='fp'?fpQueue:regQueue;
-  const next=q.find(x=>!x.serving); if(!next){showToast('No donors waiting in this lane','error');return;}
+  const q=lane==='fp'?fpQ:regQ;
+  const next=q.find(x=>!x.serving);if(!next){showToast('No donors waiting','error');return;}
   callDonor(lane,next.id);
 }
-
 function finishServing(lane,id){
-  if(lane==='fp')fpQueue=fpQueue.filter(x=>x.id!==id);
-  else if(lane==='reg')regQueue=regQueue.filter(x=>x.id!==id);
-  else peQueue=peQueue.filter(x=>x.id!==id);
-  bedsAvailable=Math.min(8,bedsAvailable+1);
-  renderAll(); showToast('Donor done — bed freed','success');
-  refreshTVInsight();
+  if(lane==='fp')fpQ=fpQ.filter(x=>x.id!==id);
+  else if(lane==='reg')regQ=regQ.filter(x=>x.id!==id);
+  else peQ=peQ.filter(x=>x.id!==id);
+  beds=Math.min(8,beds+1);renderAll();showToast('Donor done — bed freed','success');refreshTVInsight();
 }
-
 function removeDonor(lane,id){
-  if(!canManage()){showToast('Your role cannot remove donors','error');return;}
-  if(lane==='fp')fpQueue=fpQueue.filter(x=>x.id!==id);
-  else if(lane==='reg')regQueue=regQueue.filter(x=>x.id!==id);
-  else peQueue=peQueue.filter(x=>x.id!==id);
-  renderAll(); showToast('Donor removed from queue','info');
+  if(!canMgr()){showToast('Your role cannot remove donors','error');return;}
+  if(lane==='fp')fpQ=fpQ.filter(x=>x.id!==id);
+  else if(lane==='reg')regQ=regQ.filter(x=>x.id!==id);
+  else peQ=peQ.filter(x=>x.id!==id);
+  renderAll();showToast('Donor removed','warn');
 }
-
 function moveUp(lane,id){
-  if(!canManage()){showToast('Your role cannot reorder donors','error');return;}
-  const q=lane==='fp'?fpQueue:regQueue;
+  if(!canMgr()){showToast('Your role cannot reorder donors','error');return;}
+  const q=lane==='fp'?fpQ:regQ;
   const ns=q.filter(x=>!x.serving);
-  const idx=ns.findIndex(x=>x.id===id);
-  if(idx<=0){showToast('Already at top of queue','info');return;}
-  const ai=q.findIndex(x=>x.id===id);
-  const bi=q.findIndex(x=>x.id===ns[idx-1].id);
-  [q[ai],q[bi]]=[q[bi],q[ai]];
-  renderAll(); showToast('Donor moved up','success');
+  const idx=ns.findIndex(x=>x.id===id);if(idx<=0){showToast('Already at top','warn');return;}
+  const ai=q.findIndex(x=>x.id===id),bi=q.findIndex(x=>x.id===ns[idx-1].id);
+  [q[ai],q[bi]]=[q[bi],q[ai]];renderAll();showToast('Donor moved up','success');
 }
-
-function openTransfer(lane,id){
-  if(!canManage()){showToast('Your role cannot transfer donors','error');return;}
-  const q=lane==='fp'?fpQueue:lane==='reg'?regQueue:peQueue;
-  const d=q.find(x=>x.id===id); if(!d)return;
-  transferDonorId=id; transferFromLane=lane;
-  document.getElementById('transfer-donor-name').textContent=d.name;
-  const opts=document.getElementById('transfer-opts'); opts.innerHTML='';
-  const lanes=[{id:'fp',label:'FastPass Lane',color:'var(--blue)'},{id:'reg',label:'Regular Lane',color:'var(--green)'},{id:'pe',label:'PE / Screening Lane',color:'var(--amber)'}];
-  lanes.filter(l=>l.id!==lane).forEach(l=>{
-    const div=document.createElement('div');
-    div.className='transfer-opt';
-    div.innerHTML=`<div style="width:10px;height:10px;border-radius:50%;background:${l.color}"></div><div style="font-size:13px;font-weight:500">${l.label}</div>`;
-    div.onclick=()=>{document.querySelectorAll('.transfer-opt').forEach(o=>o.classList.remove('selected'));div.classList.add('selected');div.dataset.target=l.id;};
-    div.dataset.target=l.id;
-    opts.appendChild(div);
-  });
-  document.getElementById('transfer-modal').classList.add('open');
+function openXfer(lane,id){
+  if(!canMgr()){showToast('Your role cannot transfer donors','error');return;}
+  const q=lane==='fp'?fpQ:lane==='reg'?regQ:peQ;
+  const d=q.find(x=>x.id===id);if(!d)return;
+  xferDonorId=id;xferFromLane=lane;
+  document.getElementById('xfer-name').textContent=d.name;
+  const opts=document.getElementById('xfer-opts');opts.innerHTML='';
+  [{id:'fp',label:'FastPass Lane',color:'var(--blue)'},{id:'reg',label:'Regular Lane',color:'var(--green)'},{id:'pe',label:'PE / Screening Lane',color:'var(--amber)'}]
+    .filter(l=>l.id!==lane).forEach(l=>{
+      const div=document.createElement('div');div.className='xfer-opt';
+      div.innerHTML=`<div style="width:9px;height:9px;border-radius:50%;background:${l.color}"></div><div style="font-size:13px;font-weight:500;color:var(--text)">${l.label}</div>`;
+      div.onclick=()=>{document.querySelectorAll('.xfer-opt').forEach(o=>o.classList.remove('selected'));div.classList.add('selected');div.dataset.t=l.id;};
+      div.dataset.t=l.id;opts.appendChild(div);
+    });
+  document.getElementById('xfer-modal').classList.add('open');
 }
-
-function confirmTransfer(){
-  const selected=document.querySelector('.transfer-opt.selected');
-  if(!selected){showToast('Select a destination lane','error');return;}
-  const target=selected.dataset.target;
+function confirmXfer(){
+  const sel=document.querySelector('.xfer-opt.selected');if(!sel){showToast('Select a lane','error');return;}
+  const tgt=sel.dataset.t;
   let donor;
-  if(transferFromLane==='fp'){donor=fpQueue.find(x=>x.id===transferDonorId);fpQueue=fpQueue.filter(x=>x.id!==transferDonorId);}
-  else if(transferFromLane==='reg'){donor=regQueue.find(x=>x.id===transferDonorId);regQueue=regQueue.filter(x=>x.id!==transferDonorId);}
-  else{donor=peQueue.find(x=>x.id===transferDonorId);peQueue=peQueue.filter(x=>x.id!==transferDonorId);}
+  if(xferFromLane==='fp'){donor=fpQ.find(x=>x.id===xferDonorId);fpQ=fpQ.filter(x=>x.id!==xferDonorId);}
+  else if(xferFromLane==='reg'){donor=regQ.find(x=>x.id===xferDonorId);regQ=regQ.filter(x=>x.id!==xferDonorId);}
+  else{donor=peQ.find(x=>x.id===xferDonorId);peQ=peQ.filter(x=>x.id!==xferDonorId);}
   if(!donor)return;
-  donor.serving=false; donor.section=null;
-  if(target==='fp')fpQueue.push(donor);
-  else if(target==='reg')regQueue.push(donor);
-  else peQueue.push(donor);
-  closeTransfer(); renderAll();
-  showToast(donor.name+' transferred to '+selected.querySelector('div:last-child').textContent,'success');
+  donor.serving=false;donor.section=null;
+  if(tgt==='fp')fpQ.push(donor);else if(tgt==='reg')regQ.push(donor);else peQ.push(donor);
+  closeXfer();renderAll();showToast(donor.name+' transferred','success');
 }
-function closeTransfer(){document.getElementById('transfer-modal').classList.remove('open');}
+function closeXfer(){document.getElementById('xfer-modal').classList.remove('open');}
 
 // ── Add Modal ──────────────────────────────────────────────────
 async function openAdd(lane){
-  if(!canManage()&&lane!=='fp'){showToast('Your role cannot manually add donors','error');return;}
-  addingTo=lane;
-  document.getElementById('add-modal-title').textContent='Add donor to '+(lane==='fp'?'FastPass':lane==='pe'?'PE/Screening':'Regular')+' queue';
-  document.getElementById('add-name').value='';
-  document.getElementById('add-phone').value='';
+  if(!canMgr()){showToast('Your role cannot manually add donors','error');return;}
+  addTo=lane;
+  document.getElementById('add-modal-ttl').textContent='Add donor to '+(lane==='fp'?'FastPass':lane==='pe'?'PE/Screening':'Regular')+' queue';
+  document.getElementById('add-name').value='';document.getElementById('add-phone').value='';
   document.getElementById('add-hint').style.display='none';
   document.getElementById('add-modal').classList.add('open');
-  const btn=document.getElementById('add-confirm-btn'); btn.disabled=true;
+  const btn=document.getElementById('add-confirm');btn.disabled=true;
   try{
-    const hint=await claude([{role:'user',content:`Staff (${currentRole}) manually adding donor to ${lane} queue. State: ${fpQueue.length} FP, ${regQueue.length} regular, ${peQueue.length} PE, ${bedsAvailable} beds free. Give a 1-sentence operational tip.`}],'You are a BioLife queue expert. Be brief.');
-    document.getElementById('add-hint').textContent=hint;
-    document.getElementById('add-hint').style.display='block';
+    const h=await claude([{role:'user',content:`Staff (${curRole}) manually adding to ${lane} queue. ${fpQ.length} FP, ${regQ.length} regular, ${peQ.length} PE, ${beds} beds. 1-sentence tip.`}],'BioLife queue expert. Be brief.');
+    document.getElementById('add-hint').textContent=h;document.getElementById('add-hint').style.display='block';
   }catch(e){}
   btn.disabled=false;
 }
 function closeAdd(){document.getElementById('add-modal').classList.remove('open');}
 async function confirmAdd(){
-  const name=document.getElementById('add-name').value.trim();
-  if(!name){showToast('Enter a donor name','error');return;}
+  const name=document.getElementById('add-name').value.trim();if(!name){showToast('Enter a name','error');return;}
   const type=document.getElementById('add-type').value;
   const phone=document.getElementById('add-phone').value.trim()||'—';
-  const donor={id:nextId++,name,type,phone,section:null,serving:false,joinedAt:Date.now()};
-  if(type==='Fast Pass'||addingTo==='fp')fpQueue.push(donor);
-  else if(addingTo==='pe')peQueue.push(donor);
-  else regQueue.push(donor);
-  closeAdd(); renderAll(); showToast(name+' added to queue','success');
-  refreshTVInsight();
+  const donor={id:nid++,name,type,phone,section:null,serving:false,joinedAt:Date.now()};
+  if(type==='Fast Pass'||addTo==='fp')fpQ.push(donor);
+  else if(addTo==='pe')peQ.push(donor);
+  else regQ.push(donor);
+  closeAdd();renderAll();showToast(name+' added to queue','success');refreshTVInsight();
 }
 
 // ── Kiosk ──────────────────────────────────────────────────────
-function switchKioskTab(mode,btn){
-  document.querySelectorAll('.ktab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+function switchKTab(mode,btn){
+  document.querySelectorAll('.ktab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   document.getElementById('ktab-name').style.display=mode==='name'?'block':'none';
   document.getElementById('ktab-qr').style.display=mode==='qr'?'block':'none';
   document.getElementById('ktab-success').style.display='none';
 }
-
 async function kioskJoin(){
   const first=document.getElementById('k-first').value.trim();
   const last=document.getElementById('k-last').value.trim();
@@ -780,53 +790,46 @@ async function kioskJoin(){
   const sms=document.getElementById('k-sms').checked;
   if(!first){showToast('Enter first name','error');return;}
   const name=first+(last?' '+last.toUpperCase()+'.':'');
-  const btn=document.getElementById('kiosk-join-btn');
-  btn.disabled=true; btn.textContent='Joining...';
-  const donor={id:nextId++,name,type,phone:phone||'—',section:null,serving:false,joinedAt:Date.now()};
-  regQueue.push(donor); renderAll();
-  const msgEl=document.getElementById('k-ai-msg');
-  msgEl.style.display='block'; msgEl.textContent='Getting personalized message...';
+  const btn=document.getElementById('kbtn-join');btn.disabled=true;btn.textContent='Joining...';
+  const donor={id:nid++,name,type,phone:phone||'—',section:null,serving:false,joinedAt:Date.now()};
+  regQ.push(donor);renderAll();
+  const msgEl=document.getElementById('k-ai-msg');msgEl.style.display='block';msgEl.textContent='Generating welcome message...';
   try{
-    const pos=regQueue.filter(d=>!d.serving).length;
-    const reply=await claude([{role:'user',content:`Donor ${name} (${type}) joined Regular queue at position ${pos}. FP ahead: ${fpQueue.length}. Regular ahead: ${regQueue.length-1}. Beds: ${bedsAvailable}. SMS opted in: ${sms}. Write a warm, specific 2-sentence welcome — include estimated wait and next steps.`}],'You are a friendly queue assistant at BioLife plasma center. Be warm and brief.');
-    msgEl.textContent=reply;
-  }catch(e){msgEl.textContent='Welcome! You have joined the queue. Please watch the TV display for your number.';}
+    const pos=regQ.filter(d=>!d.serving).length;
+    const r=await claude([{role:'user',content:`Donor ${name} (${type}) joined Regular queue position ${pos}. FP ahead:${fpQ.length}. Regular ahead:${regQ.length-1}. Beds:${beds}. SMS:${sms}. Write a warm 2-sentence welcome with estimated wait and next steps.`}],'Friendly BioLife queue assistant. Warm, brief.');
+    msgEl.textContent=r;
+  }catch(e){msgEl.textContent='Welcome! You have joined the queue. Watch the TV display for your position.';}
   document.getElementById('ktab-name').style.display='none';
   document.getElementById('ktab-success').style.display='block';
-  document.getElementById('s-pos').textContent=regQueue.filter(d=>!d.serving).length;
+  document.getElementById('s-pos').textContent=regQ.filter(d=>!d.serving).length;
   document.getElementById('s-lane').textContent='Regular lane';
-  document.getElementById('s-msg').textContent=sms&&phone?`SMS updates will be sent to ${phone}`:'Watch the TV screen for your queue position.';
+  document.getElementById('s-msg').textContent=sms&&phone?`SMS updates → ${phone}`:'Watch the TV screen for your queue position.';
   document.getElementById('s-ai').textContent=msgEl.textContent;
-  btn.disabled=false; btn.textContent='Join queue';
+  btn.disabled=false;btn.textContent='Join queue';
 }
-
-async function simulateFPScan(){
-  const name=DONOR_NAMES[Math.floor(Math.random()*DONOR_NAMES.length)];
-  const btn=document.getElementById('fp-scan-btn');
-  btn.disabled=true; btn.textContent='Processing scan...';
-  const phone='('+Math.floor(300+Math.random()*600)+') '+Math.floor(200+Math.random()*700)+'-'+Math.floor(1000+Math.random()*8999);
-  const donor={id:nextId++,name,type:'Fast Pass',phone,section:null,serving:false,joinedAt:Date.now()};
-  fpQueue.push(donor); renderAll();
-  const msgEl=document.getElementById('k-fp-ai-msg');
-  msgEl.style.display='block'; msgEl.textContent='Activating FastPass...';
+const FP_NAMES=['Aisha W.','Ben S.','Carlos M.','Diana L.','Ethan K.'];let fpNi=0;
+async function simFPScan(){
+  const name=FP_NAMES[fpNi%FP_NAMES.length];fpNi++;
+  const btn=document.getElementById('kbtn-fp');btn.disabled=true;btn.textContent='Processing...';
+  const phone='('+(Math.floor(300+Math.random()*600))+') '+(Math.floor(200+Math.random()*700))+'-'+(Math.floor(1000+Math.random()*8999));
+  fpQ.push({id:nid++,name,type:'Fast Pass',phone,section:null,serving:false,joinedAt:Date.now()});renderAll();
+  const msgEl=document.getElementById('k-fp-msg');msgEl.style.display='block';msgEl.textContent='Activating...';
   try{
-    const pos=fpQueue.filter(d=>!d.serving).length;
-    const reply=await claude([{role:'user',content:`FastPass donor ${name} scanned their pass. Position ${pos} in FP lane. ${bedsAvailable} beds available. Write a brief enthusiastic 1-2 sentence confirmation — tell them they have priority access and what to expect.`}],'You are a friendly queue assistant at BioLife. Be enthusiastic and brief.');
-    msgEl.textContent=reply;
-  }catch(e){msgEl.textContent='Your FastPass is activated! You have priority access. Please wait for your section to be called.';}
+    const pos=fpQ.filter(d=>!d.serving).length;
+    const r=await claude([{role:'user',content:`FastPass donor ${name} activated. Position ${pos} in FP lane. ${beds} beds free. Enthusiastic 1-2 sentence confirmation with priority access info.`}],'Friendly BioLife assistant. Brief, enthusiastic.');
+    msgEl.textContent=r;
+  }catch(e){msgEl.textContent='FastPass activated! You have priority access. Your section will be called shortly.';}
   document.getElementById('ktab-qr').style.display='none';
   document.getElementById('ktab-success').style.display='block';
-  document.getElementById('s-pos').textContent=fpQueue.filter(d=>!d.serving).length;
+  document.getElementById('s-pos').textContent=fpQ.filter(d=>!d.serving).length;
   document.getElementById('s-lane').textContent='FastPass priority lane';
-  document.getElementById('s-msg').textContent='You have priority access via FastPass.';
+  document.getElementById('s-msg').textContent='Priority access via FastPass.';
   document.getElementById('s-ai').textContent=msgEl.textContent;
-  btn.disabled=false; btn.textContent='Simulate FastPass scan';
+  btn.disabled=false;btn.textContent='Simulate FastPass scan';
 }
-
 function resetKiosk(){
   ['k-first','k-last','k-phone'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('k-sms').checked=false;
-  document.getElementById('k-type').value='Donation';
+  document.getElementById('k-sms').checked=false;document.getElementById('k-type').value='Donation';
   document.getElementById('k-ai-msg').style.display='none';
   document.getElementById('ktab-name').style.display='block';
   document.getElementById('ktab-success').style.display='none';
@@ -836,89 +839,72 @@ function resetKiosk(){
 
 // ── TV Insight ─────────────────────────────────────────────────
 async function refreshTVInsight(){
-  const total=fpQueue.length+regQueue.length+peQueue.length;
-  if(total===0){document.getElementById('tv-insight').style.display='none';return;}
+  const tot=fpQ.length+regQ.length+peQ.length;
+  if(tot===0){document.getElementById('tv-insight').style.display='none';return;}
   try{
-    const ins=await claude([{role:'user',content:`Queue snapshot: ${fpQueue.length} FP (${fpQueue.filter(d=>d.serving).length} serving), ${regQueue.length} regular (${regQueue.filter(d=>d.serving).length} serving), ${peQueue.length} PE. Beds: ${bedsAvailable}/8. Write one concise operational status sentence for the TV display — something informative for donors or visible staff.`}],'You are a digital signage assistant for BioLife plasma center. One sentence, informative.');
+    const ins=await claude([{role:'user',content:`Queue: ${fpQ.length} FP (${fpQ.filter(d=>d.serving).length} serving), ${regQ.length} regular (${regQ.filter(d=>d.serving).length} serving), ${peQ.length} PE. Beds: ${beds}/8. One concise TV display status sentence.`}],'BioLife digital signage. One sentence, informative.');
     const el=document.getElementById('tv-insight');
-    el.style.display='flex';
-    document.getElementById('tv-insight-text').textContent=ins;
+    el.style.display='flex';document.getElementById('tv-insight-txt').textContent=ins;
   }catch(e){}
 }
 
 // ── Section Filter ─────────────────────────────────────────────
-function switchSection(section,btn){
-  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
-  currentSection=section; renderQueues();
+function switchSection(s,btn){
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  curSection=s;renderQueues();
 }
-
-function filterBySection(q,section){
-  if(section==='all')return q;
-  if(section==='screening')return q.filter(d=>!d.serving&&!d.section);
-  const sectionName=SECTION_FILTER_MAP[section];
-  if(sectionName)return q.filter(d=>d.section===sectionName);
-  return q;
+function filterSec(q,s){
+  if(s==='all')return q;
+  if(s==='screening')return q.filter(d=>!d.serving&&!d.section);
+  const sn=SEC_MAP[s];return sn?q.filter(d=>d.section===sn):q;
 }
-
-// ── Role Change ────────────────────────────────────────────────
 function onRoleChange(){
-  currentRole=document.getElementById('role-select').value;
-  renderQueues();
-  const restricted=currentRole==='MH';
-  document.getElementById('add-fp-btn').disabled=restricted;
-  document.getElementById('add-reg-btn').disabled=restricted;
-  document.getElementById('call-next-fp').disabled=false;
-  document.getElementById('call-next-reg').disabled=false;
-  showToast('Switched to '+currentRole+' role','info');
+  curRole=document.getElementById('role-sel').value;renderQueues();
+  document.getElementById('add-fp-btn').disabled=curRole==='MH';
+  document.getElementById('add-reg-btn').disabled=curRole==='MH';
+  showToast('Switched to '+curRole+' role','info');
 }
 
 // ── Render ─────────────────────────────────────────────────────
-function getBadgeHTML(type){
-  if(type==='Fast Pass')return '<span class="badge badge-fp">FastPass</span>';
-  if(type==='New Donor')return '<span class="badge badge-new">New</span>';
-  if(type==='SPE')return '<span class="badge badge-spe">SPE</span>';
-  return '<span class="badge badge-reg">Regular</span>';
+function tagHTML(type){
+  if(type==='Fast Pass')return '<span class="tag tag-fp">FastPass</span>';
+  if(type==='New Donor')return '<span class="tag tag-new">New</span>';
+  if(type==='SPE')return '<span class="tag tag-spe">SPE</span>';
+  return '<span class="tag tag-reg">Regular</span>';
 }
-
-function getWaitMin(d,i){
+function waitMin(d,i){
   if(d.serving)return 0;
   return Math.min(45,Math.max(1,i*7+Math.floor((Date.now()-d.joinedAt)/60000)));
 }
+function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});}
 
-function formatTime(ts){
-  return new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-}
-
-function renderDonorRow(d,lane,i,ns){
-  const ni=ns.indexOf(d);
-  const isServing=d.serving;
-  const canMgmt=canManage();
-  const sc=d.section?SECTION_CHIPS[d.section]?.split(' ')[0]||'chip-blue':'';
-  const tvsc=d.section?SECTION_CHIPS[d.section]?.split(' ')[1]||'tvs-blue':'';
-  const posCls=isServing?'pos-serving':lane==='fp'?'pos-fp':lane==='pe'?'pos-pe':'pos-reg';
-  const waitMin=getWaitMin(d,ni);
-  return `<div class="donor-row ${isServing?'serving-row':''}">
-    <div class="pos-badge ${posCls}">${isServing?'▶':ni+1}</div>
-    <div class="donor-main">
-      <div class="donor-name-row">
-        <span class="donor-name">${d.name}</span>
-        ${getBadgeHTML(d.type)}
-        ${isServing?'<span class="badge badge-serving">Serving</span>':''}
+function dRow(d,lane,ns){
+  const ni=ns.indexOf(d);const isS=d.serving;const cm=canMgr();
+  const sc=d.section?(SEC_CHIP[d.section]||'').split(' ')[0]||'':'';
+  const pc=isS?'pos-srv':lane==='fp'?'pos-fp':lane==='pe'?'pos-pe':'pos-reg';
+  const wm=waitMin(d,ni);
+  return `<div class="drow ${isS?'serving':''}">
+    <div class="pos ${pc}">${isS?'▶':ni+1}</div>
+    <div class="dmain">
+      <div class="dname-row">
+        <span class="dname">${d.name}</span>
+        ${tagHTML(d.type)}
+        ${isS?'<span class="tag tag-srv">Serving</span>':''}
       </div>
-      <div class="donor-detail">
-        <span class="donor-time">${formatTime(d.joinedAt)}</span>
-        <span class="donor-phone">${d.phone||'—'}</span>
-        ${d.section?`<span class="section-chip ${sc}">${d.section}</span>`:''}
-        ${!isServing?`<span class="wait-chip">~${waitMin}m wait</span>`:''}
+      <div class="dmeta">
+        <span class="dmeta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${fmtTime(d.joinedAt)}</span>
+        <span class="dmeta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 14a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.06 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 10.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 18z"/></svg>${d.phone||'—'}</span>
+        ${d.section?`<span class="sec-chip ${sc}">${d.section}</span>`:''}
+        ${!isS?`<span class="dmeta-item">~${wm}m wait</span>`:''}
       </div>
     </div>
-    <div class="row-actions">
-      ${isServing
-        ?`<button class="act-btn done" onclick="finishServing('${lane}',${d.id})">Done</button>`
-        :`${canMgmt?`<button class="act-btn" onclick="moveUp('${lane}',${d.id})">↑</button>`:''}
-          <button class="act-btn call" onclick="callDonor('${lane}',${d.id})">Call</button>
-          ${canMgmt?`<button class="act-btn transfer" onclick="openTransfer('${lane}',${d.id})">⇄</button>`:''}
-          ${canMgmt?`<button class="act-btn remove" onclick="removeDonor('${lane}',${d.id})">✕</button>`:''}`
+    <div class="dactions">
+      ${isS
+        ?`<button class="abtn done" onclick="finishServing('${lane}',${d.id})">Done</button>`
+        :`${cm?`<button class="abtn" onclick="moveUp('${lane}',${d.id})">↑</button>`:''}
+          <button class="abtn call" onclick="callDonor('${lane}',${d.id})">Call</button>
+          ${cm?`<button class="abtn xfer" onclick="openXfer('${lane}',${d.id})">⇄</button>`:''}
+          ${cm?`<button class="abtn danger" onclick="removeDonor('${lane}',${d.id})">✕</button>`:''}`
       }
     </div>
   </div>`;
@@ -926,56 +912,49 @@ function renderDonorRow(d,lane,i,ns){
 
 function renderQueues(){
   ['fp','reg'].forEach(lane=>{
-    const rawQ=lane==='fp'?fpQueue:regQueue;
-    const q=filterBySection(rawQ,currentSection);
+    const rq=lane==='fp'?fpQ:regQ;
+    const q=filterSec(rq,curSection);
     const ns=q.filter(x=>!x.serving);
     const el=document.getElementById(lane+'-queue');
-    if(!q.length){el.innerHTML='<div class="empty">No donors'+(currentSection!=='all'?' in this section':'')+'</div>';return;}
-    el.innerHTML=q.map(d=>renderDonorRow(d,lane,0,ns)).join('');
+    el.innerHTML=q.length?q.map(d=>dRow(d,lane,ns)).join(''):'<div class="empty-state"><p>No donors'+(curSection!=='all'?' in this section':'')+'</p></div>';
   });
-  document.getElementById('fp-count').textContent=fpQueue.length+' donor'+(fpQueue.length!==1?'s':'');
-  document.getElementById('reg-count').textContent=regQueue.length+' donor'+(regQueue.length!==1?'s':'');
+  document.getElementById('fp-count').textContent=fpQ.length+' donor'+(fpQ.length!==1?'s':'');
+  document.getElementById('reg-count').textContent=regQ.length+' donor'+(regQ.length!==1?'s':'');
 }
 
 function renderMetrics(){
-  document.getElementById('m-total').textContent=fpQueue.length+regQueue.length+peQueue.length;
-  document.getElementById('m-fp').textContent=fpQueue.filter(d=>!d.serving).length;
-  document.getElementById('m-reg').textContent=regQueue.filter(d=>!d.serving).length;
-  document.getElementById('m-beds').textContent=bedsAvailable;
-  const rw=regQueue.filter(d=>!d.serving);
+  document.getElementById('m-total').textContent=fpQ.length+regQ.length+peQ.length;
+  document.getElementById('m-fp').textContent=fpQ.filter(d=>!d.serving).length;
+  document.getElementById('m-reg').textContent=regQ.filter(d=>!d.serving).length;
+  document.getElementById('m-beds').textContent=beds;
+  const rw=regQ.filter(d=>!d.serving);
   document.getElementById('m-wait').textContent=rw.length?Math.round(rw.length*7)+'m':'—';
-  // section counts
   ['all','screening','blue','red','yellow','green'].forEach(s=>{
-    const el=document.getElementById('sc-'+s);
-    if(!el)return;
-    const all=[...fpQueue,...regQueue,...peQueue];
-    if(s==='all'){el.textContent=all.length;}
-    else if(s==='screening'){el.textContent=all.filter(d=>!d.serving&&!d.section).length;}
-    else{const sn=SECTION_FILTER_MAP[s];el.textContent=all.filter(d=>d.section===sn).length;}
+    const el=document.getElementById('sc-'+s);if(!el)return;
+    const all=[...fpQ,...regQ,...peQ];
+    if(s==='all')el.textContent=all.length;
+    else if(s==='screening')el.textContent=all.filter(d=>!d.serving&&!d.section).length;
+    else{const sn=SEC_MAP[s];el.textContent=all.filter(d=>d.section===sn).length;}
   });
 }
 
 function renderTV(){
-  const lanes=[{q:fpQueue,bodyId:'tv-fp-body',countId:'tv-fp-count'},{q:regQueue,bodyId:'tv-reg-body',countId:'tv-reg-count'},{q:peQueue,bodyId:'tv-pe-body',countId:'tv-pe-count'}];
-  lanes.forEach(({q,bodyId,countId})=>{
-    const el=document.getElementById(bodyId);
-    const cnt=document.getElementById(countId);
-    const waiting=q.filter(d=>!d.serving);
-    cnt.textContent=waiting.length+' waiting';
-    if(!q.length){el.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:rgba(255,255,255,.2)">No donors</div>';return;}
+  [{q:fpQ,b:'tv-fp-body',c:'tv-fp-cnt'},{q:regQ,b:'tv-reg-body',c:'tv-reg-cnt'},{q:peQ,b:'tv-pe-body',c:'tv-pe-cnt'}].forEach(({q,b,c})=>{
+    const el=document.getElementById(b);const cnt=document.getElementById(c);
+    cnt.textContent=q.filter(d=>!d.serving).length+' waiting';
+    if(!q.length){el.innerHTML='<div style="padding:18px;text-align:center;font-size:11px;color:rgba(255,255,255,.18)">No donors</div>';return;}
     const ns=q.filter(x=>!x.serving);
     el.innerHTML=q.map(d=>{
       const ni=ns.indexOf(d);
-      const sc=d.section?SECTION_CHIPS[d.section]?.split(' ')[1]||'tvs-blue':'';
-      const wm=getWaitMin(d,ni);
-      return `<div class="tv-row ${d.serving?'tv-serving':''}">
-        <div class="tv-row-pos">${d.serving?'▶':ni+1}</div>
-        <div class="tv-row-info">
-          ${d.serving?'<div class="tv-serving-tag">SERVING NOW</div>':''}
-          <div class="tv-row-name">${d.name}</div>
-          ${!d.serving?`<div class="tv-row-wait">~${wm} min wait</div>`:''}
+      const sc=(SEC_CHIP[d.section]||'').split(' ')[1]||'';
+      return `<div class="tv-drow ${d.serving?'tv-srv':''}">
+        <div class="tv-pos">${d.serving?'▶':ni+1}</div>
+        <div class="tv-dinfo">
+          ${d.serving?'<div class="tv-srv-tag">SERVING NOW</div>':''}
+          <div class="tv-dname">${d.name}</div>
+          ${!d.serving?`<div class="tv-dwait">~${waitMin(d,ni)} min wait</div>`:''}
         </div>
-        ${d.section?`<div class="tv-section-tag ${sc}">${d.section}</div>`:''}
+        ${d.section?`<div class="tv-dsec ${sc}">${d.section}</div>`:''}
       </div>`;
     }).join('');
   });
@@ -985,43 +964,39 @@ function renderAll(){renderMetrics();renderQueues();renderTV();}
 
 // ── Clock ──────────────────────────────────────────────────────
 function tick(){
-  const now=new Date();
-  const el=document.getElementById('tv-clock');
-  if(el)el.textContent=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const s=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const tv=document.getElementById('tv-clk');if(tv)tv.textContent=s;
+  const tt=document.getElementById('top-time');if(tt)tt.textContent=s;
 }
 
-// ── QR Frame ──────────────────────────────────────────────────
+// ── QR ─────────────────────────────────────────────────────────
 function buildQR(){
-  const f=document.getElementById('qr-frame'); if(!f)return;
-  let h='';
-  for(let i=0;i<49;i++){
-    const dark=Math.random()>.42;
-    h+=`<div style="background:${dark?'#1A1816':'#F0EDE8'};border-radius:1px"></div>`;
-  }
+  const f=document.getElementById('qr-frame');if(!f)return;
+  let h='';for(let i=0;i<49;i++){const dk=Math.random()>.42;h+=`<div style="background:${dk?'#1E293B':'#F1F5F9'};border-radius:1px"></div>`;}
   f.innerHTML=h;
 }
 
-// ── Init ───────────────────────────────────────────────────────
-function initApp(){
-  renderAll(); buildQR(); tick(); setInterval(tick,15000);
-  addAIMsg('Queue is live. Add donors via the Kiosk tab or the DIS/DEP Simulator buttons, then ask me anything — who to call next, role-specific guidance, wait time estimates.','system');
-}
-
-// Auto-launch on page load
-window.addEventListener('DOMContentLoaded', initApp);
-
+// ── Nav ────────────────────────────────────────────────────────
 function switchView(v,tab){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.tnav').forEach(x=>x.classList.remove('active'));
-  document.getElementById('view-'+v).classList.add('active'); tab.classList.add('active');
+  document.querySelectorAll('.ntab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');tab.classList.add('active');
   if(v==='tv')refreshTVInsight();
 }
 
+// ── Toast ──────────────────────────────────────────────────────
 function showToast(msg,type=''){
   const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast show'+(type?' '+type:'');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2800);
+  t.innerHTML=(type==='success'?'✓ ':type==='error'?'✕ ':type==='warn'?'⚠ ':'ℹ ')+msg;
+  t.className='toast show'+(type?' '+type:'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);
 }
+
+// ── Init ───────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  loadDemoData();renderAll();buildQR();tick();setInterval(tick,15000);
+  addMsg('Queue loaded with demo data. Try calling donors, switching roles, or firing DIS/DEP events. Ask me anything about queue status or priorities.','system');
+});
 </script>
 </body>
 </html>
